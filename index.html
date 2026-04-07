@@ -1,0 +1,2167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>PLASMA Prototype</title>
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --c-farming:  #BA7517;
+    --c-water:    #185FA5;
+    --c-health:   #3B6D11;
+    --c-stories:  #993556;
+    --c-music:    #6D2145;
+    --c-festivals:#993C1D;
+    --c-animals:  #0F6E56;
+    --c-people:   #4438A4;
+    --c-places:   #5F5E5A;
+    --c-seasons:  #854F0B;
+    --c-food:     #527A18;
+    --c-crafts:   #085041;
+    --bg:    #ffffff;
+    --bg2:   #f4f4f5;
+    --bg3:   #e4e4e7;
+    --text:  #09090b;
+    --muted: #71717a;
+    --border:#e4e4e7;
+    --accent:#f59e0b;
+    font-size: 15px;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    height: 100dvh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NAV — bottom tab bar */
+  #proto-nav {
+    order: 1; /* sits below all views */
+    display: flex;
+    background: #fafafa;
+    padding: 6px 8px max(10px, env(safe-area-inset-bottom));
+    gap: 6px;
+    flex-shrink: 0;
+    border-top: 1px solid var(--border);
+  }
+  #proto-nav button {
+    flex: 1;
+    padding: 10px 4px 6px;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    letter-spacing: 0.03em;
+    transition: background 0.15s, color 0.15s;
+    min-height: 44px;
+  }
+  #proto-nav button.active { background: var(--bg3); color: var(--accent); }
+
+  .view { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+  .view.active { display: flex; }
+
+  /* DIAL */
+  #dial-player {
+    flex-shrink: 0;
+    padding: 10px 12px 8px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+  }
+  #dial-player .p-row1 {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 7px;
+  }
+  #player-icon-wrap { position: relative; width: 44px; height: 44px; flex-shrink: 0; }
+  #dial-player .p-icon { flex-shrink: 0; }
+  #dial-player .p-meta { flex: 1; min-width: 0; }
+  #dial-player .p-title {
+    font-size: 15px; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  #dial-player .p-cat { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  #dial-player .p-dur {
+    font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums; flex-shrink: 0;
+  }
+  #annotate-btn {
+    flex-shrink: 0;
+    padding: 5px 10px;
+    border-radius: 20px;
+    border: 1.5px solid var(--accent);
+    background: transparent;
+    color: var(--accent);
+    font-size: 11px; font-weight: 500;
+    cursor: pointer; white-space: nowrap;
+  }
+  #annotate-btn:active { background: var(--accent); color: #09090b; }
+  #wave-wrap {
+    position: relative; width: 100%; margin-bottom: 6px;
+  }
+  #wave-player {
+    width: 100%; height: 46px;
+    cursor: pointer; display: block;
+  }
+  #wave-tooltip {
+    display: none;
+    position: absolute; top: calc(100% + 6px);
+    transform: translateX(-50%);
+    background: var(--bg); color: var(--text);
+    font-size: 11px; font-weight: 500;
+    padding: 7px 10px; border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+    white-space: nowrap; pointer-events: none;
+    z-index: 5; min-width: 110px;
+  }
+  .tip-label {
+    display: flex; align-items: center; gap: 5px;
+  }
+  .tip-dot {
+    width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  }
+  .tip-more {
+    display: block; margin-top: 5px;
+    font-size: 10px; font-weight: 400; color: var(--muted);
+    text-decoration: underline; cursor: pointer;
+  }
+  #wave-tooltip::before {
+    content: ''; position: absolute; bottom: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-bottom-color: var(--border);
+  }
+  #wave-tooltip::after {
+    content: ''; position: absolute; bottom: calc(100% - 1px); left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-bottom-color: var(--bg);
+  }
+  #countdown-ring {
+    position: absolute; top: -8px; left: -8px;
+    width: 60px; height: 60px; pointer-events: none;
+  }
+#dial-canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+  #dial-canvas { display: block; width: 100%; height: 100%; }
+
+  /* SHELF */
+  #shelf {
+    flex-shrink: 0;
+    height: 172px;
+    display: flex; flex-direction: column;
+    overflow: hidden;
+    border-top: 1px solid var(--border);
+    background: var(--bg);
+  }
+  #shelf.snapping { transition: height 0.22s cubic-bezier(0.32, 0.72, 0, 1); }
+  #shelf-handle {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 5px; padding: 7px 14px 8px;
+    flex-shrink: 0;
+    border-bottom: 1px solid var(--border);
+    cursor: ns-resize;
+    user-select: none; touch-action: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #shelf-drag-pill {
+    width: 32px; height: 4px; border-radius: 2px;
+    background: var(--border); flex-shrink: 0;
+  }
+  #shelf-handle-row {
+    display: flex; align-items: center; gap: 8px; width: 100%;
+  }
+  #shelf-handle-label {
+    font-size: 12px; font-weight: 500; color: var(--text);
+  }
+  #shelf-handle-sub {
+    font-size: 12px; color: var(--muted);
+  }
+  #shelf-list {
+    flex: 1; overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+  .shelf-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 14px;
+    min-height: 52px;
+    cursor: pointer;
+    border-left: 3px solid transparent;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+  }
+  .shelf-row:active { background: var(--bg2); }
+  .shelf-row.playing {
+    border-left-color: var(--accent);
+    background: var(--bg2);
+  }
+  .shelf-row-icon { flex-shrink: 0; }
+  .shelf-row-body { flex: 1; min-width: 0; }
+  .shelf-row-title {
+    font-size: 14px; font-weight: 400; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .shelf-row.playing .shelf-row-title {
+    color: var(--accent); font-weight: 500;
+  }
+  .shelf-row-cat { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .shelf-row-dur {
+    font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums; flex-shrink: 0;
+  }
+  .shelf-now-badge {
+    font-size: 10px; font-weight: 600;
+    color: var(--accent); letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+  .shelf-section {
+    padding: 7px 14px 5px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    position: sticky; top: 0;
+  }
+
+  /* TAG MAP */
+  #map-header {
+    padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
+    background: var(--bg2); flex-shrink: 0;
+  }
+  #map-header h2 { font-size: 17px; font-weight: 500; }
+  #map-header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+  #map-canvas-wrap { flex: 1; position: relative; overflow: hidden; }
+  #map-canvas { display: block; width: 100%; height: 100%; }
+
+  /* ANNOTATE */
+  #ann-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px;
+    padding-top: max(12px, env(safe-area-inset-top));
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2); flex-shrink: 0;
+  }
+  #ann-back {
+    background: none; border: none; font-size: 20px;
+    cursor: pointer; color: var(--text); padding: 4px; line-height: 1;
+  }
+  #ann-header .ann-title { font-size: 15px; font-weight: 500; flex: 1; }
+  #ann-header .ann-cat { font-size: 12px; color: var(--muted); margin-top: 1px; }
+  #ann-body {
+    flex: 1; overflow-y: auto; padding: 14px;
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .ann-section-label {
+    font-size: 11px; font-weight: 500; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 8px;
+  }
+  #frag-canvas {
+    width: 100%; height: 72px; cursor: pointer;
+    display: block; border-radius: 8px; background: var(--bg3);
+  }
+  #frag-time {
+    text-align: center; font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums; margin-top: 6px;
+  }
+  #tag-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+  .tag-btn {
+    display: flex; align-items: center; gap: 6px;
+    padding: 7px 12px 7px 8px; border-radius: 20px;
+    border: 1.5px solid var(--border); background: var(--bg2);
+    cursor: pointer; font-size: 13px; font-weight: 400;
+    color: var(--text); transition: all 0.15s;
+  }
+  .tag-btn svg { flex-shrink: 0; width: 14px; height: 14px; }
+  .tag-btn.selected { font-weight: 500; }
+  #selected-pills { display: flex; flex-wrap: wrap; gap: 6px; min-height: 28px; }
+  .pill {
+    padding: 4px 10px; border-radius: 20px;
+    font-size: 12px; font-weight: 500;
+    border: 1.5px solid transparent;
+  }
+  #ann-actions {
+    display: flex; gap: 10px; flex-shrink: 0;
+    padding: 14px; border-top: 1px solid var(--border); background: var(--bg2);
+  }
+  #record-btn {
+    flex: 1; padding: 14px; border: 1.5px solid var(--border);
+    border-radius: 10px; background: var(--bg2); color: var(--text);
+    font-size: 14px; font-weight: 500; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    gap: 8px; transition: all 0.2s;
+  }
+  #record-btn.recording { background: #2A1010; border-color: #FF6B6B; color: #FF6B6B; }
+  #save-btn {
+    flex: 1; padding: 14px; border: none; border-radius: 10px;
+    background: var(--accent); color: #09090b;
+    font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+
+  /* BROWSE */
+  #browse-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 12px 14px; border-bottom: 1px solid var(--border);
+    background: var(--bg2); flex-shrink: 0;
+  }
+  #browse-back {
+    background: none; border: none; font-size: 20px;
+    cursor: pointer; color: var(--text); padding: 4px; line-height: 1;
+  }
+  .browse-cat-info { flex: 1; }
+  .browse-cat-name { font-size: 15px; font-weight: 500; }
+  .browse-cat-count { font-size: 12px; color: var(--muted); }
+  #sort-strip {
+    display: flex; border-bottom: 1px solid var(--border);
+    background: var(--bg2); flex-shrink: 0;
+  }
+  .sort-btn {
+    flex: 1; padding: 9px; border: none; background: transparent;
+    font-size: 12px; color: var(--muted); cursor: pointer;
+    border-bottom: 2px solid transparent; transition: all 0.15s;
+  }
+  .sort-btn.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 500; }
+  #card-list {
+    flex: 1; overflow-y: auto; padding: 10px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .rec-card {
+    border-radius: 10px; overflow: hidden;
+    background: var(--bg2); border: 1px solid var(--border);
+  }
+  .scene-canvas-wrap { position: relative; }
+  .scene-canvas-wrap canvas { display: block; width: 100%; height: 115px; }
+  .play-over-btn {
+    position: absolute; top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    width: 50px; height: 50px; border-radius: 50%;
+    background: rgba(255,255,255,0.90); border: none;
+    box-shadow: 0 2px 20px rgba(0,0,0,.5);
+    font-size: 16px; cursor: pointer; color: #09090b;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .info-bar {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; background: var(--bg3);
+    height: 38px; border-top: 1px solid var(--border);
+  }
+  .info-bar .tag-icons { display: flex; gap: 4px; }
+  .ann-dots { display: flex; gap: 3px; flex: 1; align-items: center; }
+  .ann-dot { width: 7px; height: 7px; border-radius: 50%; }
+  .card-dur {
+    font-size: 12px; color: var(--muted);
+    font-variant-numeric: tabular-nums; margin-left: auto;
+  }
+</style>
+</head>
+<body>
+
+<div id="proto-nav">
+  <button class="active" onclick="showView('dial')">⟳ Dial</button>
+  <button onclick="showView('annotate')">✦ Annotate</button>
+</div>
+
+<div id="view-dial" class="view active">
+  <div id="dial-player">
+    <div class="p-row1">
+      <div id="player-icon-wrap">
+        <div class="p-icon" id="player-icon" onclick="togglePlay()" style="width:44px;height:44px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;cursor:pointer;"></div>
+        <canvas id="countdown-ring" width="60" height="60"></canvas>
+      </div>
+      <div class="p-meta">
+        <div class="p-title" id="player-title">Ragi harvest at Gudibande</div>
+        <div class="p-cat" id="player-cat">Farming</div>
+      </div>
+      <span class="p-dur" id="player-dur">3:42</span>
+      <button id="annotate-btn" onclick="showView('annotate')">+ annotate</button>
+    </div>
+    <div id="wave-wrap">
+      <canvas id="wave-player"></canvas>
+      <div id="wave-tooltip"></div>
+    </div>
+  </div>
+  <div id="dial-canvas-wrap">
+    <canvas id="dial-canvas"></canvas>
+  </div>
+  <div id="shelf">
+    <div id="shelf-handle" onpointerdown="shelfDragStart(event)">
+      <div id="shelf-drag-pill"></div>
+      <div id="shelf-handle-row">
+        <div id="shelf-cat-icon" style="width:24px;height:24px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
+        <div id="shelf-handle-text">
+          <span id="shelf-handle-label">Farming</span>
+          <span id="shelf-handle-sub"> · 8 recordings</span>
+        </div>
+      </div>
+    </div>
+    <div id="shelf-list"></div>
+  </div>
+</div>
+
+
+<div id="view-annotate" class="view">
+  <div id="ann-header">
+    <button id="ann-back" onclick="showView('dial')">←</button>
+    <div style="flex:1">
+      <div class="ann-title">Ragi harvest at Gudibande</div>
+      <div class="ann-cat">Farming · 3:42</div>
+    </div>
+    <div id="ann-header-icon" style="width:36px;height:36px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;"></div>
+  </div>
+  <div id="ann-body">
+    <div>
+      <div class="ann-section-label">select fragment</div>
+      <canvas id="frag-canvas" height="72"></canvas>
+      <div id="frag-time">0:15 → 1:05 &nbsp;·&nbsp; 0:50 selected</div>
+    </div>
+    <div>
+      <div class="ann-section-label">tag this fragment</div>
+      <div id="tag-grid"></div>
+    </div>
+    <div>
+      <div class="ann-section-label">applied tags</div>
+      <div id="selected-pills"></div>
+    </div>
+  </div>
+  <div id="ann-actions">
+    <button id="record-btn" onclick="toggleRecord()">🎙 record voice note</button>
+    <button id="save-btn" onclick="saveAnnotation()">save annotation</button>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────
+const CATS = [
+  { name:'Farming',  color:'#BA7517' },
+  { name:'Water',    color:'#185FA5' },
+  { name:'Health',   color:'#3B6D11' },
+  { name:'Stories',  color:'#993556' },
+  { name:'Music',    color:'#6D2145' },
+  { name:'Festivals',color:'#993C1D' },
+  { name:'Animals',  color:'#0F6E56' },
+  { name:'People',   color:'#4438A4' },
+  { name:'Places',   color:'#5F5E5A' },
+  { name:'Seasons',  color:'#854F0B' },
+  { name:'Food',     color:'#527A18' },
+  { name:'Crafts',   color:'#085041' },
+];
+
+const CAT_STORIES = [
+  // Farming
+  ['Ragi harvest at Gudibande','First rains prayer','Ploughing songs of Doddaballapur','Millet grinding chant','Bullock cart journey','Seed saving traditions','Terraced field memory','Harvest festival at dusk'],
+  // Water
+  ['Elder Lakshamma on water','Monsoon song from the valley','Tank restoration memory','Walking to the well','Flood season story','River naming tradition','Children at the pond','Rainwater harvesting chant'],
+  // Health
+  ['Healing herbs of Devarayanadurga','Grandmother\'s fever cure','Forest medicine walk','Midwife\'s birth chant','Village elder on bone-setting','Neem tree knowledge','Fasting and feasting cycles','Turmeric harvest songs'],
+  // Stories
+  ['Old trade path memory','Tiger and the farmer tale','Why the peacock dances','River goddess legend','Three brothers folktale','The crow and the pot','Moon and the weaver','Night of the full moon'],
+  // Music
+  ['Night music by the pond','Festival drumming, Sankranti','Flute player of the hills','Women\'s harvest songs','Evening raga memory','Children\'s clapping rhyme','Nadaswaram at the temple','Lullaby from the valley'],
+  // Festivals
+  ['Ugadi celebration memory','Deepavali in the village','Ganesh procession story','Jatra at the hilltop temple','Harvest moon celebration','Color songs of Holi','New year rice drawing','Sankranti fire songs'],
+  // Animals
+  ['Cattle grazing routes','Elephant at the forest edge','Shepherd\'s night watch','Buffalo crossing the river','Birds before the monsoon','Snake and the anthill','Peacock at the edge of fields','Dog that found water'],
+  // People
+  ['Headman\'s boundary walk','Woman who planted the grove','Blacksmith\'s last forge','The traveling healer','Grandmother\'s migration story','Teacher under the tree','Children of the crossroads','Elder on village memory'],
+  // Places
+  ['Sacred grove at dusk','Ruins near the tank','Mountain pass memory','The haunted field story','Market town history','Stone inscription memory','Boundary stone stories','Valley before the road'],
+  // Seasons
+  ['Summer well-drying story','Winter fog and the harvest','When the river ran dry','Spring blossoms memory','Cold nights by the fire','Flood year of 1972','The year of no rains','Dry season migrations'],
+  // Food
+  ['Forest food gathering','Ragi mudde at dawn','Wild fruit seasons','Salt trading routes','Tamarind tree memory','Women\'s grain exchange','Evening market stories','Clay pot cooking songs'],
+  // Crafts
+  ['Clay pot making','Basket weaving chant','Loom song of the weavers','Blacksmith\'s fire memory','Rope twisting at night','Mat making by the river','Bamboo craft traditions','Painted wall memories'],
+];
+
+function currentStories() { return CAT_STORIES[dialState.catIdx]; }
+
+// ─── WAVE GENERATION ─────────────────────────────────────────────────
+// Layered sinusoids produce a smooth, realistic-looking audio envelope.
+function genWave(n, seed) {
+  const s = (seed || 1);
+  return Array.from({length: n}, (_, i) => {
+    const t = i / n;
+    const v = 0.28
+      + 0.22 * Math.sin(t * Math.PI * (6  + s % 5) + s * 0.7)
+      + 0.16 * Math.sin(t * Math.PI * (13 + s % 7) + s * 1.3)
+      + 0.10 * Math.sin(t * Math.PI * (27 + s % 3) + s * 2.1)
+      + 0.08 * Math.sin(t * Math.PI * 51           + s * 0.3)
+      + 0.06 * Math.sin(t * Math.PI * 4            + s * 1.7);
+    return Math.max(0.04, Math.min(1, v));
+  });
+}
+
+let playerWave = genWave(120, 1);
+let fragWave   = genWave(120, 1);
+
+// ─── ANNOTATIONS ────────────────────────────────────────────────────
+const ANN_LABELS = [
+  'starts singing','mentions water tank','elder speaks up',
+  'place name given','second voice','crowd joins in',
+  'crop name','ancestor reference','seasonal marker','tool described',
+  'laughter','song begins','prayer ends','name of person',
+];
+
+function genAnnotations(storyIdx, catIdx) {
+  const seed  = storyIdx * 17 + catIdx * 5;
+  const count = 2 + (seed % 3);
+  return Array.from({length: count}, (_, i) => ({
+    pos:    ((seed * (i + 1) * 11) % 82 + 8) / 100,
+    catIdx: (catIdx + i * 4 + 1) % 12,
+    label:  ANN_LABELS[(seed + i * 3) % ANN_LABELS.length],
+  }));
+}
+
+let playerAnnotations = genAnnotations(0, 0);
+
+// ─── WAVEFORM: simple symmetric bars ────────────────────────────────
+// Trace a smooth filled waveform shape using midpoint bezier smoothing
+function traceWavePath(ctx, wave, W, cy, maxH) {
+  const N = wave.length;
+  ctx.beginPath();
+  ctx.moveTo(0, cy);
+  // top half — smooth curve through samples
+  for (let i = 0; i < N; i++) {
+    const x1 = ((i)   / N) * W,  y1 = cy - wave[i] * maxH;
+    const x2 = ((i+1) / N) * W,  y2 = cy - (wave[i+1] ?? wave[N-1]) * maxH;
+    ctx.quadraticCurveTo(x1, y1, (x1+x2)/2, (y1+y2)/2);
+  }
+  ctx.lineTo(W, cy);
+  // bottom half — mirror, reversed
+  for (let i = N - 1; i >= 0; i--) {
+    const x1 = ((i+1) / N) * W,  y1 = cy + (wave[i+1] ?? wave[N-1]) * maxH;
+    const x2 = ((i)   / N) * W,  y2 = cy + wave[i] * maxH;
+    ctx.quadraticCurveTo(x1, y1, (x1+x2)/2, (y1+y2)/2);
+  }
+  ctx.closePath();
+}
+
+function drawWaveSymmetric(canvas, wave, progress, accentColor, annotations) {
+  const W   = canvas._cssW || canvas.clientWidth;
+  const H   = canvas._cssH || canvas.clientHeight;
+  const dpr = canvas._dpr  || 1;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  // waveform occupies top portion; bottom 14px reserved for annotation markers
+  const MARKER_ZONE = annotations && annotations.length ? 14 : 0;
+  const cy   = (H - MARKER_ZONE) / 2;
+  const maxH = cy - 2;
+
+  // unplayed: dim fill
+  traceWavePath(ctx, wave, W, cy, maxH);
+  ctx.fillStyle = '#a1a1aa'; ctx.globalAlpha = 0.55; ctx.fill();
+
+  // played: accent fill, clipped to playhead
+  if (progress > 0) {
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0, 0, progress * W, H - MARKER_ZONE); ctx.clip();
+    traceWavePath(ctx, wave, W, cy, maxH);
+    ctx.fillStyle = accentColor; ctx.globalAlpha = 1; ctx.fill();
+    ctx.restore();
+  }
+
+  // playhead
+  if (progress > 0.01 && progress < 0.99) {
+    ctx.globalAlpha = 0.9;
+    ctx.fillStyle   = '#09090b';
+    ctx.fillRect(Math.round(progress * W) - 1, 0, 2, H - MARKER_ZONE);
+  }
+  ctx.globalAlpha = 1;
+
+  // annotation markers
+  if (annotations && annotations.length) {
+    const my = H - MARKER_ZONE / 2; // vertical center of marker zone
+    annotations.forEach(ann => {
+      const ax  = ann.pos * W;
+      const cat = CATS[ann.catIdx];
+      // stem from waveform bottom to marker
+      ctx.globalAlpha = 0.35;
+      ctx.strokeStyle = cat.color;
+      ctx.lineWidth   = 1;
+      ctx.beginPath(); ctx.moveTo(ax, H - MARKER_ZONE); ctx.lineTo(ax, my - 4); ctx.stroke();
+      // dot
+      ctx.globalAlpha = 1;
+      ctx.fillStyle   = cat.color;
+      ctx.beginPath(); ctx.arc(ax, my, 4, 0, Math.PI * 2); ctx.fill();
+    });
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Fragment waveform: smooth filled shape, selection region highlighted
+function drawWaveFragment(canvas, wave, selStart, selEnd, accentColor) {
+  const W   = canvas._cssW || canvas.clientWidth;
+  const H   = canvas._cssH || canvas.clientHeight;
+  const dpr = canvas._dpr  || 1;
+  const ctx = canvas.getContext('2d');
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const cy   = H / 2;
+  const maxH = cy - 4;
+
+  // dim unselected base
+  traceWavePath(ctx, wave, W, cy, maxH);
+  ctx.fillStyle = '#d4d4d8'; ctx.globalAlpha = 0.25; ctx.fill();
+
+  // bright selected region
+  ctx.save();
+  ctx.beginPath(); ctx.rect(selStart * W, 0, (selEnd - selStart) * W, H); ctx.clip();
+  traceWavePath(ctx, wave, W, cy, maxH);
+  ctx.fillStyle = accentColor; ctx.globalAlpha = 0.9; ctx.fill();
+  ctx.restore();
+
+  // selection bracket — two vertical lines + top bar
+  ctx.globalAlpha = 1;
+  const sx1 = selStart * W, sx2 = selEnd * W;
+  ctx.strokeStyle = accentColor; ctx.lineWidth = 2; ctx.lineCap = 'butt';
+  // left edge
+  ctx.beginPath(); ctx.moveTo(sx1, 0); ctx.lineTo(sx1, H); ctx.stroke();
+  // right edge
+  ctx.beginPath(); ctx.moveTo(sx2, 0); ctx.lineTo(sx2, H); ctx.stroke();
+  // top bar connecting them
+  ctx.lineWidth = 3; ctx.lineCap = 'round';
+  ctx.beginPath(); ctx.moveTo(sx1, 2); ctx.lineTo(sx2, 2); ctx.stroke();
+  // bottom bar
+  ctx.beginPath(); ctx.moveTo(sx1, H - 2); ctx.lineTo(sx2, H - 2); ctx.stroke();
+
+  // handle circles
+  [sx1, sx2].forEach(hx => {
+    ctx.fillStyle = accentColor; ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 2;
+    ctx.globalAlpha = 1; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.arc(hx, cy, 7, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+  });
+  ctx.globalAlpha = 1;
+}
+
+// ─── ICON DRAWING ────────────────────────────────────────────────────
+function ico(ctx, name, x, y, size, color) {
+  const r = size;
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.fillStyle   = color;
+  ctx.lineWidth   = Math.max(1.5, r * 0.1);
+  ctx.lineCap = 'round';
+  ctx.lineJoin = 'round';
+
+  switch (name.toLowerCase()) {
+    case 'farming': {
+      const stems = 3, spread = r * 0.35;
+      for (let i = 0; i < stems; i++) {
+        const sx = x + (i - 1) * spread;
+        ctx.beginPath(); ctx.moveTo(sx, y + r); ctx.lineTo(sx, y - r * 0.3); ctx.stroke();
+        ctx.beginPath(); ctx.ellipse(sx, y - r * 0.55, r * 0.13, r * 0.28, 0.15, 0, Math.PI * 2); ctx.fill();
+      }
+      break;
+    }
+    case 'water': {
+      ctx.beginPath();
+      ctx.moveTo(x, y - r * 0.85);
+      ctx.bezierCurveTo(x + r*0.7, y - r*0.1, x + r*0.7, y + r*0.6, x, y + r*0.75);
+      ctx.bezierCurveTo(x - r*0.7, y + r*0.6, x - r*0.7, y - r*0.1, x, y - r*0.85);
+      ctx.fill(); break;
+    }
+    case 'health': {
+      ctx.beginPath();
+      ctx.moveTo(x, y - r*0.85);
+      ctx.bezierCurveTo(x+r*0.7, y-r*0.4, x+r*0.7, y+r*0.4, x, y+r*0.85);
+      ctx.bezierCurveTo(x-r*0.7, y+r*0.4, x-r*0.7, y-r*0.4, x, y-r*0.85);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(x, y - r*0.7); ctx.lineTo(x, y + r*0.7); ctx.stroke();
+      break;
+    }
+    case 'stories': {
+      const bx = x-r*0.6, bw = r*1.2, bh = r*1.5, by = y-r*0.75;
+      ctx.fillRect(bx, by, bw, bh);
+      ctx.fillStyle = 'rgba(255,255,255,0.5)';
+      for (let i = 0; i < 3; i++) ctx.fillRect(bx+r*0.15, by+r*0.25+i*r*0.35, bw-r*0.3, r*0.12);
+      break;
+    }
+    case 'music': {
+      ctx.beginPath(); ctx.ellipse(x-r*0.25, y+r*0.55, r*0.35, r*0.22, -0.5, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x+r*0.1, y+r*0.55); ctx.lineTo(x+r*0.1, y-r*0.7); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x+r*0.1, y-r*0.7);
+      ctx.bezierCurveTo(x+r*0.6, y-r*0.8, x+r*0.7, y-r*0.4, x+r*0.4, y-r*0.2);
+      ctx.lineTo(x+r*0.4, y-r*0.6); ctx.lineTo(x+r*0.1, y-r*0.5);
+      ctx.closePath(); ctx.fill(); break;
+    }
+    case 'festivals': {
+      const pts = 5, outerR = r*0.9, innerR = r*0.4;
+      ctx.beginPath();
+      for (let i = 0; i < pts*2; i++) {
+        const a = (i * Math.PI / pts) - Math.PI/2;
+        const rr = i%2===0 ? outerR : innerR;
+        i===0 ? ctx.moveTo(x+rr*Math.cos(a), y+rr*Math.sin(a))
+              : ctx.lineTo(x+rr*Math.cos(a), y+rr*Math.sin(a));
+      }
+      ctx.closePath(); ctx.fill(); break;
+    }
+    case 'animals': {
+      ctx.beginPath(); ctx.ellipse(x, y+r*0.15, r*0.65, r*0.45, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x+r*0.5, y-r*0.4, r*0.32, r*0.32, 0, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x+r*0.35, y-r*0.75, r*0.12, r*0.2, -0.3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.ellipse(x+r*0.65, y-r*0.75, r*0.12, r*0.2,  0.3, 0, Math.PI*2); ctx.fill();
+      break;
+    }
+    case 'people': {
+      ctx.beginPath(); ctx.arc(x, y-r*0.55, r*0.3, 0, Math.PI*2); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(x-r*0.45, y+r*0.9);
+      ctx.quadraticCurveTo(x-r*0.5, y+r*0.1, x, y-r*0.15);
+      ctx.quadraticCurveTo(x+r*0.5, y+r*0.1, x+r*0.45, y+r*0.9);
+      ctx.closePath(); ctx.fill(); break;
+    }
+    case 'places': {
+      ctx.beginPath(); ctx.arc(x, y-r*0.35, r*0.5, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.4)';
+      ctx.beginPath(); ctx.arc(x, y-r*0.35, r*0.25, 0, Math.PI*2); ctx.fill();
+      ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(x-r*0.35, y+r*0.2); ctx.lineTo(x, y+r*0.9); ctx.lineTo(x+r*0.35, y+r*0.2); ctx.closePath(); ctx.fill();
+      break;
+    }
+    case 'seasons': {
+      ctx.beginPath(); ctx.arc(x, y, r*0.38, 0, Math.PI*2); ctx.fill();
+      for (let i = 0; i < 8; i++) {
+        const a = (i/8)*Math.PI*2;
+        ctx.beginPath();
+        ctx.moveTo(x+Math.cos(a)*r*0.5, y+Math.sin(a)*r*0.5);
+        ctx.lineTo(x+Math.cos(a)*r*0.85, y+Math.sin(a)*r*0.85);
+        ctx.stroke();
+      }
+      break;
+    }
+    case 'food': {
+      ctx.beginPath(); ctx.arc(x, y+r*0.1, r*0.65, Math.PI, 0); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = 'rgba(255,255,255,0.3)';
+      ctx.fillRect(x-r*0.7, y+r*0.08, r*1.4, r*0.1);
+      ctx.fillStyle = color;
+      for (let i = -1; i <= 1; i++) {
+        ctx.beginPath();
+        ctx.moveTo(x+i*r*0.28, y-r*0.08);
+        ctx.quadraticCurveTo(x+i*r*0.28+r*0.1, y-r*0.5, x+i*r*0.28, y-r*0.7);
+        ctx.stroke();
+      }
+      break;
+    }
+    case 'crafts': {
+      ctx.beginPath();
+      for (let i = 0; i < 6; i++) {
+        const a = (i/6)*Math.PI*2 - Math.PI/6;
+        i===0 ? ctx.moveTo(x+r*Math.cos(a), y+r*Math.sin(a))
+              : ctx.lineTo(x+r*Math.cos(a), y+r*Math.sin(a));
+      }
+      ctx.closePath(); ctx.stroke();
+      for (let i = 0; i < 3; i++) {
+        const a1 = (i/6)*Math.PI*2 - Math.PI/6, a2 = a1+Math.PI;
+        ctx.beginPath();
+        ctx.moveTo(x+r*Math.cos(a1), y+r*Math.sin(a1));
+        ctx.lineTo(x+r*Math.cos(a2), y+r*Math.sin(a2));
+        ctx.stroke();
+      }
+      break;
+    }
+  }
+  ctx.restore();
+}
+
+// ─── LUCIDE ICON SYSTEM ──────────────────────────────────────────────
+const CAT_LUCIDE = [
+  'wheat','droplets','heart-pulse','book-open','music',
+  'sparkles','paw-print','users','map-pin','sun','utensils','scissors',
+];
+
+// canvas-ready Image objects keyed by "catIdx-color"
+const _iconImgCache = {};
+let   _iconSvgEls   = []; // keep SVG DOM nodes alive for cloning
+
+function initIconCache() {
+  if (!window.lucide) return;
+  const wrap = document.createElement('div');
+  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;visibility:hidden;';
+  CAT_LUCIDE.forEach(name => {
+    const i = document.createElement('i');
+    i.setAttribute('data-lucide', name);
+    wrap.appendChild(i);
+  });
+  document.body.appendChild(wrap);
+  lucide.createIcons();
+
+  _iconSvgEls = Array.from(wrap.querySelectorAll('svg'));
+  // pre-warm category-color images
+  CATS.forEach((cat, i) => getIconImg(i, cat.color));
+  // pre-warm white images for selected map nodes
+  CATS.forEach((_, i) => getIconImg(i, '#ffffff'));
+  // leave wrap in DOM so SVGs remain accessible for cloning
+}
+
+function getIconImg(catIdx, color) {
+  const key = catIdx + '-' + color;
+  if (_iconImgCache[key]) return _iconImgCache[key];
+  const src = _iconSvgEls[catIdx];
+  if (!src) return null;
+  const svg = src.cloneNode(true);
+  svg.setAttribute('width',  48);
+  svg.setAttribute('height', 48);
+  svg.setAttribute('stroke', color);
+  svg.setAttribute('fill',   'none');
+  svg.setAttribute('stroke-width', '2');
+  svg.setAttribute('stroke-linecap',  'round');
+  svg.setAttribute('stroke-linejoin', 'round');
+  const str = new XMLSerializer().serializeToString(svg);
+  const img = new Image(48, 48);
+  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(str);
+  _iconImgCache[key] = img;
+  return img;
+}
+
+// Draw icon on canvas from prerendered image
+function drawCanvasIcon(ctx, catIdx, x, y, size, color) {
+  const img = getIconImg(catIdx, color || CATS[catIdx].color);
+  if (img && img.complete && img.naturalWidth) {
+    ctx.drawImage(img, x - size/2, y - size/2, size, size);
+  }
+}
+
+// Render a Lucide icon circle into a div element
+function drawIconCircle(el, catName, color, size) {
+  const catIdx = CATS.findIndex(c => c.name === catName);
+  if (catIdx < 0) return;
+  const iconName = CAT_LUCIDE[catIdx];
+  el.style.background = color + '22';
+  el.style.width  = size + 'px';
+  el.style.height = size + 'px';
+  el.style.borderRadius = '50%';
+  el.style.display = 'flex';
+  el.style.alignItems = 'center';
+  el.style.justifyContent = 'center';
+  el.style.flexShrink = '0';
+  const iconSize = Math.round(size * 0.5);
+  el.innerHTML = `<i data-lucide="${iconName}"></i>`;
+  if (window.lucide) lucide.createIcons();
+  const svg = el.querySelector('svg');
+  if (svg) {
+    svg.style.cssText = `width:${iconSize}px;height:${iconSize}px;stroke:${color};fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;`;
+  }
+}
+
+// ─── AUDIO ───────────────────────────────────────────────────────────
+// Each of the 12 categories gets a distinct note from a pentatonic scale.
+// Stories get a short high ping. All tones use Web Audio API — no files needed.
+const CAT_FREQS = [
+  196.0,  // Farming   — G3
+  220.0,  // Water     — A3
+  261.6,  // Health    — C4
+  293.7,  // Stories   — D4
+  329.6,  // Music     — E4
+  349.2,  // Festivals — F4
+  392.0,  // Animals   — G4
+  440.0,  // People    — A4
+  493.9,  // Places    — B4
+  523.3,  // Seasons   — C5
+  587.3,  // Food      — D5
+  659.3,  // Crafts    — E5
+];
+
+let audioCtx = null;
+
+function ensureAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  if (audioCtx.state === 'suspended') audioCtx.resume();
+}
+
+// Play a short tone: freq in Hz, dur in seconds, type = oscillator waveform
+function playTone(freq, dur, type) {
+  ensureAudio();
+  const osc   = audioCtx.createOscillator();
+  const gain  = audioCtx.createGain();
+  const now   = audioCtx.currentTime;
+  osc.type    = type || 'sine';
+  osc.frequency.setValueAtTime(freq, now);
+  // short ADSR envelope
+  gain.gain.setValueAtTime(0, now);
+  gain.gain.linearRampToValueAtTime(0.18, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start(now);
+  osc.stop(now + dur + 0.02);
+}
+
+function playCatTone(idx) {
+  playTone(CAT_FREQS[idx], 0.25, 'sine');
+  speak(CATS[idx].name);
+}
+function playStoryTone(idx) {
+  playTone(880, 0.08, 'triangle');
+  const s = currentStories();
+  speak(s[idx % s.length]);
+}
+
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'kn-IN';
+  u.volume = 0.9;
+  u.rate = 0.95;
+  speechSynthesis.speak(u);
+}
+
+// ─── STATE ───────────────────────────────────────────────────────────
+let dialState = {
+  catIdx: 0, storyIdx: 0,
+  catRot: 0, storyRot: 0,
+  dragging: null,
+  dragStartAngle: 0, dragStartRot: 0,
+};
+let mapSelectedCat  = null;
+let annSelectedTags = new Set();
+let annStart = 0.15, annEnd = 0.55;
+let isPlaying   = false;
+let isRecording = false;
+
+function currentCat() { return CATS[dialState.catIdx]; }
+
+// ─── VIEWS ───────────────────────────────────────────────────────────
+function showView(v) {
+  document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('#proto-nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('view-'+v).classList.add('active');
+  document.querySelectorAll('#proto-nav button')[['dial','annotate'].indexOf(v)].classList.add('active');
+  if (v==='dial')     setTimeout(initDial,     30);
+  if (v==='annotate') setTimeout(initAnnotate, 30);
+}
+
+// ─── CANVAS HELPERS ──────────────────────────────────────────────────
+function resizeCanvas(canvas, w, h) {
+  const dpr = Math.min(window.devicePixelRatio||1, 2);
+  canvas.width  = w * dpr; canvas.height = h * dpr;
+  canvas.style.width  = w + 'px'; canvas.style.height = h + 'px';
+  canvas._dpr  = dpr; canvas._cssW = w; canvas._cssH = h;
+}
+
+// ─── DIAL ────────────────────────────────────────────────────────────
+function initDial() {
+  const cat = currentCat();
+  drawIconCircle(document.getElementById('player-icon'), cat.name, cat.color, 44);
+  document.getElementById('player-title').textContent = currentStories()[dialState.storyIdx % currentStories().length];
+  document.getElementById('player-cat').textContent   = cat.name;
+  playerWave = genWave(120, dialState.storyIdx + 1);
+  fragWave   = playerWave;
+
+  const wrap   = document.getElementById('dial-canvas-wrap');
+  const canvas = document.getElementById('dial-canvas');
+  resizeCanvas(canvas, wrap.clientWidth, wrap.clientHeight);
+
+  playerAnnotations = genAnnotations(dialState.storyIdx, dialState.catIdx);
+  const wc = document.getElementById('wave-player');
+  wc.style.width = '';
+  const waveW = wc.offsetWidth || document.getElementById('dial-player').clientWidth - 28;
+  resizeCanvas(wc, waveW, wc.clientHeight || 46);
+  drawWaveSymmetric(wc, playerWave, playPos, cat.color, playerAnnotations);
+  initWaveInteraction();
+  startCountdown();
+  drawDial();
+
+  canvas.onpointerdown   = dialPointerDown;
+  canvas.onpointermove   = dialPointerMove;
+  canvas.onpointerup     = dialPointerUp;
+  canvas.onpointercancel = () => {
+    if (!dialState.dragging) return;
+    const ring = dialState.dragging;
+    dialState.dragging = null;
+    startMomentum(ring);
+  };
+  renderShelf();
+}
+
+function drawDial() {
+  const canvas = document.getElementById('dial-canvas');
+  const ctx    = canvas.getContext('2d');
+  const dpr    = canvas._dpr || 1;
+  const W      = canvas._cssW || canvas.width/dpr;
+  const H      = canvas._cssH || canvas.height/dpr;
+  ctx.setTransform(1,0,0,1,0,0);
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  const cx = W/2, cy = H;
+  const OR  = Math.min(W*0.36, H*0.68);
+  const OTW = OR * 0.15;           // outer ring (stories) track width
+  const ITW = OR * 0.30;           // inner ring (categories) — wider, heavier
+  const IR  = OR - OTW/2 - ITW/2; // inner ring center radius
+  const cat = currentCat();
+
+  // radial gradient bg — gives the dial depth
+  const bgGrad = ctx.createRadialGradient(cx, cy, IR*0.2, cx, cy, OR*1.15);
+  bgGrad.addColorStop(0, '#f9f9fa');
+  bgGrad.addColorStop(1, '#f4f4f5');
+  ctx.fillStyle = bgGrad;
+  ctx.fillRect(0, 0, W, H);
+
+  // ring groove tracks
+  ctx.save();
+  ctx.strokeStyle = '#f59e0b'; ctx.globalAlpha = 0.15;
+  ctx.lineWidth = OTW;
+  ctx.beginPath(); ctx.arc(cx, cy, OR, Math.PI, 0); ctx.stroke();
+  ctx.lineWidth = ITW;
+  ctx.beginPath(); ctx.arc(cx, cy, IR, Math.PI, 0); ctx.stroke();
+  ctx.restore();
+
+  // dividing line between inner and outer rings
+  ctx.save();
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = '#d4d4d8';
+  ctx.globalAlpha = 0.9;
+  ctx.beginPath(); ctx.arc(cx, cy, IR + ITW * 0.5, Math.PI, 0); ctx.stroke();
+  ctx.restore();
+
+  // center cap
+  ctx.save();
+  const capR = IR - ITW * 0.5;
+  const capGrad = ctx.createRadialGradient(cx, cy - capR*0.2, 0, cx, cy, capR*1.1);
+  capGrad.addColorStop(0, '#e4e4e7');
+  capGrad.addColorStop(1, '#f4f4f5');
+  ctx.fillStyle = capGrad;
+  ctx.beginPath(); ctx.arc(cx, cy, capR, Math.PI, 0); ctx.closePath(); ctx.fill();
+  ctx.restore();
+
+  const showLabels = W >= 500;
+
+  // inner ring: categories
+  const nCat = CATS.length;
+  const iconBase = ITW * 0.38;  // icon size scales with inner track width
+  for (let i = 0; i < nCat; i++) {
+    const angle = -Math.PI/2 + (i/nCat)*Math.PI*2 + dialState.catRot;
+    if (Math.sin(angle) > 0.15) continue;
+    const ix = cx + IR*Math.cos(angle);
+    const iy = cy + IR*Math.sin(angle);
+    const normA    = ((angle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+    const distFrom12 = Math.abs(normA - Math.PI*1.5) / (Math.PI/2*1.1);
+    const fade       = Math.max(0, 1 - distFrom12);
+    const iconSize   = iconBase * (0.6 + fade * 0.4);
+    const fontSize   = Math.round(ITW * (0.14 + fade * 0.08));
+
+    ctx.save();
+    ctx.globalAlpha = 0.2 + fade * 0.8;
+    drawCanvasIcon(ctx, i, ix, iy, iconSize, CATS[i].color);
+    if (showLabels && fade > 0.4) {
+      ctx.fillStyle = '#71717a';
+      ctx.font      = `${fontSize}px -apple-system,sans-serif`;
+      ctx.textAlign = 'center';
+      ctx.fillText(CATS[i].name, ix, iy - iconSize * 0.6 - 4);
+    }
+    ctx.restore();
+  }
+
+  // outer ring: stories for current category
+  const stories = currentStories();
+  const nSt = stories.length;
+  for (let i = 0; i < nSt; i++) {
+    const angle = -Math.PI/2 + (i/nSt)*Math.PI*2 + dialState.storyRot;
+    if (Math.sin(angle) > 0.1) continue;
+    const sx = cx + OR*Math.cos(angle);
+    const sy = cy + OR*Math.sin(angle);
+    const normA    = ((angle % (Math.PI*2)) + Math.PI*2) % (Math.PI*2);
+    const distFrom12 = Math.abs(normA - Math.PI*1.5) / (Math.PI/2*1.1);
+    const fade       = Math.max(0, 1 - distFrom12);
+    const dotR       = OTW * (0.22 + fade * 0.22);
+
+    ctx.save();
+    ctx.globalAlpha = 0.2 + fade * 0.8;
+    ctx.fillStyle = '#71717a';
+    ctx.beginPath(); ctx.arc(sx, sy, dotR, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur = 0;
+
+    if (showLabels && fade > 0.35) {
+      ctx.fillStyle = '#71717a';
+      ctx.font      = `${Math.round(8 + fade*5)}px -apple-system,sans-serif`;
+      ctx.textAlign = 'center';
+      const isSelected = i === dialState.storyIdx;
+      const label = isSelected ? stories[i] : (stories[i].length > 22 ? stories[i].slice(0,20)+'…' : stories[i]);
+      ctx.fillText(label, sx, sy - dotR - 5);
+    }
+    ctx.restore();
+  }
+
+
+  // center cap label: show selected category + story
+  ctx.save();
+  ctx.textAlign = 'center';
+  const capLabelR = IR - ITW * 0.55;
+  const cat2 = currentCat();
+  ctx.fillStyle = cat2.color;
+  ctx.font = `500 ${Math.round(Math.min(13, capLabelR * 0.2))}px -apple-system,sans-serif`;
+  ctx.fillText(cat2.name, cx, cy - capLabelR * 0.35);
+  ctx.fillStyle = '#71717a';
+  ctx.font = `${Math.round(Math.min(10, capLabelR * 0.15))}px -apple-system,sans-serif`;
+  const storyLabel = currentStories()[dialState.storyIdx % currentStories().length];
+  ctx.fillText(storyLabel, cx, cy - capLabelR * 0.15);
+  ctx.restore();
+}
+
+function getAngle(evt, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  return Math.atan2(evt.clientY - rect.top  - canvas._cssH,
+                    evt.clientX - rect.left - canvas._cssW/2);
+}
+function getDist(evt, canvas) {
+  const rect = canvas.getBoundingClientRect();
+  const dx   = evt.clientX - rect.left  - canvas._cssW/2;
+  const dy   = evt.clientY - rect.top   - canvas._cssH;
+  return Math.sqrt(dx*dx + dy*dy);
+}
+
+// Momentum + snap state
+let _vel       = 0;      // radians per ms
+let _lastA     = 0;
+let _lastT     = 0;
+let _animId    = null;
+
+function cancelAnim() {
+  if (_animId) { cancelAnimationFrame(_animId); _animId = null; }
+}
+
+// Return the rotation that places item idx at 12 o'clock, nearest to current rot
+function targetRot(ring, idx) {
+  const n   = ring === 'outer' ? currentStories().length : CATS.length;
+  const cur = ring === 'outer' ? dialState.storyRot : dialState.catRot;
+  let t     = -(idx / n) * Math.PI * 2;
+  while (t - cur >  Math.PI) t -= Math.PI * 2;
+  while (t - cur < -Math.PI) t += Math.PI * 2;
+  return t;
+}
+
+// Find index of item closest to 12 o'clock for the given ring
+function nearestIdx(ring) {
+  const n   = ring === 'outer' ? currentStories().length : CATS.length;
+  const rot = ring === 'outer' ? dialState.storyRot : dialState.catRot;
+  let best = 0, bestD = Infinity;
+  for (let i = 0; i < n; i++) {
+    const a = ((-Math.PI/2 + (i/n)*Math.PI*2 + rot) % (Math.PI*2) + Math.PI*2) % (Math.PI*2);
+    const d = Math.abs(a - Math.PI * 1.5);
+    if (d < bestD) { bestD = d; best = i; }
+  }
+  return best;
+}
+
+function updateIdx(ring) {
+  const best = nearestIdx(ring);
+  if (ring === 'outer') {
+    if (best !== dialState.storyIdx) { dialState.storyIdx = best; playStoryTone(best); }
+  } else {
+    if (best !== dialState.catIdx) {
+      dialState.catIdx   = best;
+      dialState.storyIdx = 0;
+      dialState.storyRot = 0;
+      playCatTone(best);
+    }
+  }
+}
+
+// Animate spring snap to item idx
+function snapTo(ring, idx) {
+  cancelAnim();
+  const start = ring === 'outer' ? dialState.storyRot : dialState.catRot;
+  const end   = targetRot(ring, idx);
+  const t0    = performance.now();
+  const DUR   = 320;
+
+  // play tone once on snap
+  if (ring === 'outer') {
+    if (dialState.storyIdx !== idx) { dialState.storyIdx = idx; playStoryTone(idx); }
+  } else {
+    if (dialState.catIdx !== idx) {
+      dialState.catIdx   = idx;
+      dialState.storyIdx = 0;
+      dialState.storyRot = 0;
+      playCatTone(idx);
+    }
+  }
+
+  function frame(now) {
+    const t    = Math.min(1, (now - t0) / DUR);
+    const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
+    const rot  = start + (end - start) * ease;
+    if (ring === 'outer') dialState.storyRot = rot;
+    else                  dialState.catRot   = rot;
+    drawDial();
+    if (t < 1) _animId = requestAnimationFrame(frame);
+    else       { _animId = null; updatePlayerStrip(); startCountdown(); }
+  }
+  _animId = requestAnimationFrame(frame);
+}
+
+// Inertia animation: coast then snap
+function startMomentum(ring) {
+  cancelAnim();
+  const maxVel = ring === 'outer' ? 0.012 : 0.005;
+  let vel = Math.max(-maxVel, Math.min(maxVel, _vel));
+  let lastT   = performance.now();
+
+  function frame(now) {
+    const dt = Math.min(now - lastT, 32);
+    lastT    = now;
+
+    // apply velocity
+    const dRot = vel * dt;
+    if (ring === 'outer') dialState.storyRot += dRot;
+    else                  dialState.catRot   += dRot;
+    updateIdx(ring);
+
+    // outer ring: light & fast (0.90); inner ring: heavy & slow (0.78)
+    const damping = ring === 'outer' ? 0.90 : 0.78;
+    vel *= Math.pow(damping, dt / 16.67);
+
+    drawDial();
+
+    if (Math.abs(vel) > 0.00006) {
+      _animId = requestAnimationFrame(frame);
+    } else {
+      // coast finished — spring snap to nearest
+      snapTo(ring, nearestIdx(ring));
+    }
+  }
+  _animId = requestAnimationFrame(frame);
+}
+
+function updatePlayerStrip() {
+  const cat  = currentCat();
+  playerWave        = genWave(120, dialState.storyIdx + 1);
+  fragWave          = playerWave;
+  playerAnnotations = genAnnotations(dialState.storyIdx, dialState.catIdx);
+  drawIconCircle(document.getElementById('player-icon'), cat.name, cat.color, 44);
+  document.getElementById('player-title').textContent = currentStories()[dialState.storyIdx % currentStories().length];
+  document.getElementById('player-cat').textContent   = cat.name;
+  const wc = document.getElementById('wave-player');
+  wc.style.width = '';
+  resizeCanvas(wc, wc.offsetWidth, wc.clientHeight || 46);
+  drawWaveSymmetric(wc, playerWave, playPos, cat.color, playerAnnotations);
+  renderShelf();
+}
+
+function dialPointerDown(evt) {
+  cancelAnim();
+  const canvas = document.getElementById('dial-canvas');
+  const OR  = Math.min(canvas._cssW*0.36, canvas._cssH*0.68);
+  const OTW = OR * 0.15;
+  const ITW = OR * 0.30;
+  const IR  = OR - OTW/2 - ITW/2;
+  const dist = getDist(evt, canvas);
+
+  if (dist > IR - ITW*0.5 && dist < OR + OTW*0.5) {
+    dialState.dragging       = dist > IR + ITW*0.5 ? 'outer' : 'inner';
+    dialState.dragStartAngle = getAngle(evt, canvas);
+    dialState.dragStartRot   = dialState.dragging === 'outer' ? dialState.storyRot : dialState.catRot;
+    _lastA = dialState.dragStartAngle;
+    _lastT = performance.now();
+    _vel   = 0;
+    canvas.setPointerCapture(evt.pointerId);
+  }
+}
+
+function dialPointerMove(evt) {
+  if (!dialState.dragging) return;
+  const canvas = document.getElementById('dial-canvas');
+  const angle  = getAngle(evt, canvas);
+  const now    = performance.now();
+
+  // track velocity
+  const dt = now - _lastT;
+  if (dt > 0) {
+    let dA = angle - _lastA;
+    if (dA >  Math.PI) dA -= Math.PI * 2;
+    if (dA < -Math.PI) dA += Math.PI * 2;
+    _vel = dA / dt;
+  }
+  _lastA = angle; _lastT = now;
+
+  let delta = angle - dialState.dragStartAngle;
+  if (delta >  Math.PI) delta -= Math.PI * 2;
+  if (delta < -Math.PI) delta += Math.PI * 2;
+
+  const ring = dialState.dragging;
+  if (ring === 'outer') dialState.storyRot = dialState.dragStartRot + delta;
+  else                  dialState.catRot   = dialState.dragStartRot + delta;
+  updateIdx(ring);
+  drawDial();
+}
+
+function dialPointerUp(evt) {
+  if (!dialState.dragging) return;
+  const canvas = document.getElementById('dial-canvas');
+  const ring   = dialState.dragging;
+  dialState.dragging = null;
+
+  // Distinguish tap from drag: tap = total angular movement < 6°
+  let totalDelta = getAngle(evt, canvas) - dialState.dragStartAngle;
+  if (totalDelta >  Math.PI) totalDelta -= Math.PI * 2;
+  if (totalDelta < -Math.PI) totalDelta += Math.PI * 2;
+
+  if (Math.abs(totalDelta) < 0.10) {
+    // TAP — find item nearest to pointer angle and snap to it
+    const tapA = getAngle(evt, canvas);
+    const n    = ring === 'outer' ? currentStories().length : CATS.length;
+    const rot  = ring === 'outer' ? dialState.storyRot : dialState.catRot;
+    let best   = 0, bestD = Infinity;
+    for (let i = 0; i < n; i++) {
+      let d = Math.abs(tapA - (-Math.PI/2 + (i/n)*Math.PI*2 + rot));
+      if (d > Math.PI)  d = Math.PI*2 - d;
+      if (d < bestD) { bestD = d; best = i; }
+    }
+    snapTo(ring, best);
+  } else {
+    // DRAG release — coast with momentum then snap
+    startMomentum(ring);
+  }
+}
+
+// ─── PLAYBACK SIMULATION ─────────────────────────────────────────────
+let playPos       = 0;    // 0–1 position through current story
+let _playRaf      = null;
+let _playEpoch    = 0;    // performance.now() when play last resumed
+let _playPosBase  = 0;    // playPos value at last resume
+
+function storyDurSec() {
+  const t = currentStories()[dialState.storyIdx % currentStories().length];
+  return (2 + (t.length % 3)) * 60 + ((t.charCodeAt(0) * 13) % 60);
+}
+
+// ─── AUTOPLAY COUNTDOWN ──────────────────────────────────────────────
+const AUTOPLAY_DELAY = 3000;
+let _countdownRaf   = null;
+let _countdownStart = 0;
+
+function startCountdown() {
+  cancelCountdown();
+  if (_playRaf) { cancelAnimationFrame(_playRaf); _playRaf = null; }
+  isPlaying = false;
+  playPos   = 0; _playPosBase = 0;
+  _countdownStart = performance.now();
+  _tickCountdown();
+}
+
+function cancelCountdown() {
+  if (_countdownRaf) { cancelAnimationFrame(_countdownRaf); _countdownRaf = null; }
+  _clearCountdownRing();
+}
+
+function _tickCountdown() {
+  const progress = Math.min(1, (performance.now() - _countdownStart) / AUTOPLAY_DELAY);
+  _drawCountdownRing(progress);
+  if (progress >= 1) { _countdownRaf = null; _clearCountdownRing(); startPlayback(); return; }
+  _countdownRaf = requestAnimationFrame(_tickCountdown);
+}
+
+function _drawCountdownRing(progress) {
+  const canvas = document.getElementById('countdown-ring');
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.width  = 60 * dpr; canvas.height = 60 * dpr;
+  canvas.style.width = '60px'; canvas.style.height = '60px';
+  ctx.scale(dpr, dpr);
+  const cx = 30, cy = 30, r = 25;
+  ctx.clearRect(0, 0, 60, 60);
+  // track
+  ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2);
+  ctx.strokeStyle = '#e4e4e7'; ctx.lineWidth = 2.5; ctx.stroke();
+  // progress arc
+  ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
+  ctx.strokeStyle = currentCat().color; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+}
+
+function updatePlayerIcon() {
+  const icon = document.getElementById('player-icon');
+  const cat  = currentCat();
+  if (_countdownRaf) {
+    // countdown running — category icon already set by drawIconCircle, nothing to do
+    return;
+  }
+  if (isPlaying) {
+    icon.style.background  = cat.color;
+    icon.style.color       = '#fff';
+    icon.style.fontSize    = '16px';
+    icon.innerHTML = '⏸';
+  } else {
+    icon.style.background  = cat.color + '22';
+    icon.style.color       = cat.color;
+    icon.style.fontSize    = '16px';
+    icon.innerHTML = '▶';
+  }
+}
+
+function _clearCountdownRing() {
+  const canvas = document.getElementById('countdown-ring');
+  if (!canvas) return;
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+  canvas.getContext('2d').clearRect(0, 0, 60 * dpr, 60 * dpr);
+}
+
+function startPlayback() {
+  cancelCountdown();
+  if (_playRaf) cancelAnimationFrame(_playRaf);
+  playPos      = 0;
+  _playPosBase = 0;
+  _playEpoch   = performance.now();
+  isPlaying    = true;
+  updatePlayerIcon();
+  _tickPlayback();
+}
+
+function _tickPlayback() {
+  if (!isPlaying) return;
+  const dur     = storyDurSec();
+  const elapsed = (performance.now() - _playEpoch) / 1000;
+  playPos       = Math.min(1, _playPosBase + elapsed / dur);
+  _updateScrub();
+  if (playPos >= 1) { isPlaying = false; updatePlayerIcon(); return; }
+  _playRaf = requestAnimationFrame(_tickPlayback);
+}
+
+function _updateScrub() {
+  const wc = document.getElementById('wave-player');
+  if (wc && wc._cssW) drawWaveSymmetric(wc, playerWave, playPos, currentCat().color, playerAnnotations);
+}
+
+// Wave seek + annotation tap
+function initWaveInteraction() {
+  const wc = document.getElementById('wave-player');
+  let seeking = false;
+
+  function seekFromEvent(e) {
+    const rect = wc.getBoundingClientRect();
+    const pos  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    playPos      = pos;
+    _playPosBase = pos;
+    _playEpoch   = performance.now();
+    _updateScrub();
+  }
+
+  function checkAnnotationTap(e) {
+    const rect = wc.getBoundingClientRect();
+    const tapX = e.clientX - rect.left;
+    const tapY = e.clientY - rect.top;
+    const H    = wc._cssH || rect.height;
+    // markers live in the bottom 14px
+    if (tapY < H - 18) return false;
+    const W = wc._cssW || rect.width;
+    let hit = null, bestD = 12;
+    playerAnnotations.forEach(ann => {
+      const d = Math.abs(ann.pos * W - tapX);
+      if (d < bestD) { bestD = d; hit = ann; }
+    });
+    if (hit) { showWaveTooltip(hit, hit.pos * W); return true; }
+    hideWaveTooltip();
+    return false;
+  }
+
+  wc.addEventListener('pointerdown', e => {
+    if (checkAnnotationTap(e)) return;
+    seeking = true;
+    wc.setPointerCapture(e.pointerId);
+    seekFromEvent(e);
+  });
+  wc.addEventListener('pointermove', e => { if (seeking) seekFromEvent(e); });
+  wc.addEventListener('pointerup',   e => { seeking = false; });
+}
+
+let _tooltipTimer = null;
+function showWaveTooltip(ann, xPx) {
+  const tip = document.getElementById('wave-tooltip');
+  tip.innerHTML = `
+    <div class="tip-label">
+      <span class="tip-dot" style="background:${CATS[ann.catIdx].color}"></span>
+      ${ann.label}
+    </div>
+    <span class="tip-more">read more →</span>`;
+  tip.style.left    = xPx + 'px';
+  tip.style.display = 'block';
+  clearTimeout(_tooltipTimer);
+  _tooltipTimer = setTimeout(hideWaveTooltip, 3000);
+}
+function hideWaveTooltip() {
+  document.getElementById('wave-tooltip').style.display = 'none';
+}
+
+function togglePlay() {
+  cancelCountdown();
+  if (isPlaying) {
+    isPlaying    = false;
+    _playPosBase = playPos;
+    if (_playRaf) { cancelAnimationFrame(_playRaf); _playRaf = null; }
+  } else {
+    _playEpoch = performance.now();
+    isPlaying  = true;
+    _tickPlayback();
+  }
+  updatePlayerIcon();
+}
+
+// ─── SHELF ───────────────────────────────────────────────────────────
+
+// Returns [{catIdx, weight}] sorted by weight desc, excluding current category
+function relatedCategories(catIdx, topN) {
+  const scores = {};
+  for (const [a, b, w] of EDGES) {
+    if (a === catIdx) scores[b] = (scores[b] || 0) + w;
+    if (b === catIdx) scores[a] = (scores[a] || 0) + w;
+  }
+  return Object.entries(scores)
+    .map(([idx, w]) => ({ catIdx: +idx, w }))
+    .sort((a, b) => b.w - a.w)
+    .slice(0, topN);
+}
+
+function appendShelfSection(list, label) {
+  const sec = document.createElement('div');
+  sec.className = 'shelf-section';
+  sec.textContent = label;
+  list.appendChild(sec);
+}
+
+function appendShelfRow(list, title, cat, playing, onTap) {
+  const dur = `${2 + (title.length % 3)}:${String((title.charCodeAt(0) * 13) % 60).padStart(2,'0')}`;
+  const row = document.createElement('div');
+  row.className = 'shelf-row' + (playing ? ' playing' : '');
+  row.innerHTML = `
+    <div class="shelf-row-icon"></div>
+    <div class="shelf-row-body">
+      <div class="shelf-row-title">${title}</div>
+      <div class="shelf-row-cat">${playing ? '<span class="shelf-now-badge">now playing</span>' : cat.name}</div>
+    </div>
+    <span class="shelf-row-dur">${dur}</span>`;
+  row.addEventListener('click', onTap);
+  list.appendChild(row);
+  drawIconCircle(row.querySelector('.shelf-row-icon'), cat.name, cat.color, 32);
+  return row;
+}
+
+function renderShelf() {
+  const cat     = currentCat();
+  const stories = currentStories();
+
+  drawIconCircle(document.getElementById('shelf-cat-icon'), cat.name, cat.color, 24);
+  document.getElementById('shelf-handle-label').textContent = cat.name;
+  document.getElementById('shelf-handle-sub').textContent   = ` · ${stories.length} recordings`;
+
+  const list = document.getElementById('shelf-list');
+  list.innerHTML = '';
+
+  // ── current category ──────────────────────────────────────────────
+  appendShelfSection(list, cat.name);
+  let playingRow = null;
+  stories.forEach((title, i) => {
+    const playing = i === dialState.storyIdx;
+    const row = appendShelfRow(list, title, cat, playing,
+      () => selectShelfStory(dialState.catIdx, i));
+    if (playing) playingRow = row;
+  });
+
+  // ── related categories (top 3 by co-occurrence weight) ────────────
+  relatedCategories(dialState.catIdx, 3).forEach(({ catIdx: rIdx, w }) => {
+    const rCat     = CATS[rIdx];
+    const rStories = CAT_STORIES[rIdx];
+    // pick 3 stories — deterministic but varied by weight offset
+    const offset = Math.round(w * 7) % rStories.length;
+    const picks  = [0, 1, 2].map(n => (offset + n) % rStories.length);
+
+    appendShelfSection(list, `Similar · ${rCat.name}`);
+    picks.forEach(si => {
+      appendShelfRow(list, rStories[si], rCat, false,
+        () => selectShelfStory(rIdx, si));
+    });
+  });
+
+  if (playingRow) playingRow.scrollIntoView({ block: 'nearest' });
+}
+
+// ─── SHELF DRAG ───────────────────────────────────────────────────────
+const SHELF_MIN_H = 38;   // just the handle
+const SHELF_OPEN_H = 172; // default open height
+
+let _shelfDragStartY  = 0;
+let _shelfDragStartH  = 0;
+let _shelfDidDrag     = false;
+
+function shelfDragStart(e) {
+  const shelf = document.getElementById('shelf');
+  shelf.classList.remove('snapping');
+  _shelfDragStartY = e.clientY;
+  _shelfDragStartH = shelf.getBoundingClientRect().height;
+  _shelfDidDrag    = false;
+  document.addEventListener('pointermove', shelfDragMove);
+  document.addEventListener('pointerup',   shelfDragEnd);
+  e.currentTarget.setPointerCapture(e.pointerId);
+}
+
+function shelfDragMove(e) {
+  const dy = e.clientY - _shelfDragStartY;
+  if (Math.abs(dy) > 4) _shelfDidDrag = true;
+  if (!_shelfDidDrag) return;
+
+  const shelf = document.getElementById('shelf');
+  const newH  = Math.max(SHELF_MIN_H, _shelfDragStartH - dy);
+  shelf.style.height = newH + 'px';
+
+  // live-resize dial canvas
+  const wrap   = document.getElementById('dial-canvas-wrap');
+  const canvas = document.getElementById('dial-canvas');
+  resizeCanvas(canvas, wrap.clientWidth, wrap.clientHeight);
+  drawDial();
+}
+
+function shelfDragEnd(e) {
+  document.removeEventListener('pointermove', shelfDragMove);
+  document.removeEventListener('pointerup',   shelfDragEnd);
+
+  if (!_shelfDidDrag) {
+    // tap — snap between open and closed
+    shelfSnapTo(document.getElementById('shelf').getBoundingClientRect().height < SHELF_OPEN_H * 0.6
+      ? SHELF_OPEN_H : SHELF_MIN_H);
+    return;
+  }
+
+  // drag ended — snap to nearest state
+  const h = document.getElementById('shelf').getBoundingClientRect().height;
+  shelfSnapTo(h < SHELF_OPEN_H * 0.4 ? SHELF_MIN_H : SHELF_OPEN_H);
+}
+
+function shelfSnapTo(targetH) {
+  const shelf  = document.getElementById('shelf');
+  const wrap   = document.getElementById('dial-canvas-wrap');
+  const canvas = document.getElementById('dial-canvas');
+
+  shelf.classList.add('snapping');
+  shelf.style.height = targetH + 'px';
+
+  shelf.addEventListener('transitionend', () => {
+    shelf.classList.remove('snapping');
+    resizeCanvas(canvas, wrap.clientWidth, wrap.clientHeight);
+    drawDial();
+  }, { once: true });
+}
+
+function selectShelfStory(catIdx, storyIdx) {
+  cancelAnim();
+  if (catIdx !== dialState.catIdx) {
+    dialState.catIdx   = catIdx;
+    dialState.catRot   = targetRot('inner', catIdx);
+    dialState.storyIdx = 0;
+    dialState.storyRot = 0;
+  }
+  dialState.storyIdx = storyIdx;
+  dialState.storyRot = targetRot('outer', storyIdx);
+  playStoryTone(storyIdx);
+  drawDial();
+  updatePlayerStrip();
+  startCountdown();
+}
+
+// ─── TAG MAP ─────────────────────────────────────────────────────────
+const NODE_POS = [
+  {name:'Farming',   nx:0.25, ny:0.18},
+  {name:'Water',     nx:0.55, ny:0.10},
+  {name:'Health',    nx:0.20, ny:0.55},
+  {name:'Stories',   nx:0.55, ny:0.38},
+  {name:'Music',     nx:0.78, ny:0.48},
+  {name:'Festivals', nx:0.65, ny:0.25},
+  {name:'Animals',   nx:0.38, ny:0.28},
+  {name:'People',    nx:0.70, ny:0.68},
+  {name:'Places',    nx:0.30, ny:0.72},
+  {name:'Seasons',   nx:0.50, ny:0.68},
+  {name:'Food',      nx:0.18, ny:0.80},
+  {name:'Crafts',    nx:0.80, ny:0.82},
+];
+const COUNTS = [124,98,76,143,89,112,67,155,88,72,95,61];
+const EDGES  = [
+  [0,1,0.7],[0,6,0.8],[0,9,0.6],[1,8,0.5],[1,9,0.7],[2,4,0.3],
+  [2,7,0.4],[3,4,0.9],[3,7,0.6],[3,5,0.5],[4,5,0.7],[5,6,0.4],
+  [6,9,0.6],[7,8,0.5],[7,11,0.4],[8,10,0.6],[9,10,0.5],[10,11,0.3],
+];
+
+let mapCanvas, mapCtx, mapW, mapH, mapGraphH, mapPanelH, mapNodes = [];
+
+function initMap() {
+  mapCanvas = document.getElementById('map-canvas');
+  const wrap = document.getElementById('map-canvas-wrap');
+  resizeCanvas(mapCanvas, wrap.clientWidth, wrap.clientHeight);
+  mapCtx    = mapCanvas.getContext('2d');
+  mapW      = wrap.clientWidth; mapH = wrap.clientHeight;
+  mapPanelH = Math.round(mapH * 0.28);
+  mapGraphH = mapH - mapPanelH;
+  const minC = Math.min(...COUNTS), maxC = Math.max(...COUNTS);
+  mapNodes  = NODE_POS.map((p,i) => ({
+    ...p, ...CATS[i], count: COUNTS[i],
+    r: 22 + (COUNTS[i]-minC)/(maxC-minC) * 14,
+  }));
+  drawMap();
+  mapCanvas.onclick = mapClick;
+}
+
+function drawMap() {
+  const ctx = mapCtx, dpr = mapCanvas._dpr||1;
+  ctx.setTransform(1,0,0,1,0,0); ctx.scale(dpr,dpr);
+  ctx.clearRect(0, 0, mapW, mapH);
+
+  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, mapW, mapH);
+  ctx.fillStyle = '#f4f4f5'; ctx.fillRect(0, mapGraphH, mapW, mapPanelH);
+  ctx.strokeStyle = '#e4e4e7'; ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.moveTo(0, mapGraphH); ctx.lineTo(mapW, mapGraphH); ctx.stroke();
+
+  const sel    = mapSelectedCat !== null ? mapNodes[mapSelectedCat] : null;
+  const adjSet = new Set();
+  if (sel) EDGES.forEach(([a,b]) => {
+    if (a===mapSelectedCat) adjSet.add(b);
+    if (b===mapSelectedCat) adjSet.add(a);
+  });
+
+  // edges
+  EDGES.forEach(([ai,bi,str]) => {
+    const a = mapNodes[ai], b = mapNodes[bi];
+    const ax = a.nx*mapW, ay = a.ny*mapGraphH;
+    const bx = b.nx*mapW, by = b.ny*mapGraphH;
+    const isAdj = sel && (ai===mapSelectedCat || bi===mapSelectedCat);
+    ctx.save();
+    ctx.strokeStyle = isAdj ? a.color : '#d4d4d8';
+    ctx.lineWidth   = isAdj ? 0.8+str*2.5 : 0.5+str*1.5;
+    ctx.globalAlpha = isAdj ? 0.55 : 0.18;
+    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke();
+    ctx.restore();
+  });
+
+  // nodes
+  mapNodes.forEach((n,i) => {
+    const nx = n.nx*mapW, ny = n.ny*mapGraphH;
+    const isSelected = i===mapSelectedCat;
+    const isAdj      = adjSet.has(i);
+    ctx.save();
+    if (isSelected) { ctx.shadowColor = n.color; ctx.shadowBlur = 22; }
+    ctx.fillStyle   = n.color;
+    ctx.globalAlpha = isSelected ? 1 : isAdj ? 0.45 : 0.12;
+    ctx.beginPath(); ctx.arc(nx, ny, n.r, 0, Math.PI*2); ctx.fill();
+    ctx.shadowBlur  = 0;
+    ctx.strokeStyle = n.color; ctx.lineWidth = isSelected ? 2 : 1.5;
+    ctx.globalAlpha = isSelected ? 1 : isAdj ? 0.7 : 0.35;
+    ctx.beginPath(); ctx.arc(nx, ny, n.r, 0, Math.PI*2); ctx.stroke();
+    if (isSelected) {
+      ctx.globalAlpha = 0.25; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(nx, ny, n.r+5, 0, Math.PI*2); ctx.stroke();
+    }
+    ctx.globalAlpha = isSelected ? 1 : isAdj ? 1 : 0.55;
+    drawCanvasIcon(ctx, CATS.findIndex(c=>c.name===n.name), nx, ny, n.r*1.0, isSelected ? '#ffffff' : n.color);
+    ctx.restore();
+  });
+
+  drawMapPanel(sel, adjSet);
+}
+
+function drawMapPanel(sel, adjSet) {
+  const ctx = mapCtx, py = mapGraphH, pw = mapW, ph = mapPanelH;
+  if (!sel) {
+    ctx.save();
+    ctx.fillStyle = '#71717a';
+    ctx.font      = '13px -apple-system,sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('tap a category to explore', pw/2, py+ph/2);
+    ctx.restore();
+    return;
+  }
+  const PAD   = 16;
+  const iconX = PAD+26, iconY = py+ph/2;
+  ctx.save();
+  ctx.fillStyle = sel.color+'28';
+  ctx.beginPath(); ctx.arc(iconX, iconY, 26, 0, Math.PI*2); ctx.fill();
+  drawCanvasIcon(ctx, CATS.findIndex(c=>c.name===sel.name), iconX, iconY, 28, sel.color);
+  ctx.strokeStyle = sel.color; ctx.lineWidth = 1.5;
+  for (let i = 1; i <= 3; i++) {
+    ctx.globalAlpha = 0.2 + i*0.15;
+    ctx.beginPath(); ctx.arc(iconX, iconY, 26+i*8, Math.PI*0.65, Math.PI*1.35); ctx.stroke();
+  }
+  ctx.restore();
+
+  const cx2 = pw/2;
+  ctx.save();
+  ctx.fillStyle = '#09090b';
+  ctx.font      = '500 17px -apple-system,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText(sel.name, cx2, py+24);
+  ctx.fillStyle = '#71717a'; ctx.font = '12px -apple-system,sans-serif';
+  ctx.fillText(sel.count+' recordings', cx2, py+40);
+  const bw = 100, bh = 3, bx = cx2-bw/2, by2 = py+48;
+  ctx.fillStyle = '#e4e4e7'; ctx.fillRect(bx, by2, bw, bh);
+  ctx.fillStyle = sel.color; ctx.fillRect(bx, by2, bw*(sel.count/Math.max(...COUNTS)), bh);
+  ctx.fillStyle = '#71717a'; ctx.font = '11px -apple-system,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('also appears with:', cx2, py+66);
+  const adjArr = [...adjSet].slice(0,5);
+  let sx = cx2 - adjArr.length*14 + 11;
+  adjArr.forEach(ai => {
+    const an = mapNodes[ai];
+    ctx.fillStyle = an.color+'28';
+    ctx.beginPath(); ctx.arc(sx, py+84, 11, 0, Math.PI*2); ctx.fill();
+    drawCanvasIcon(ctx, CATS.findIndex(c=>c.name===an.name), sx, py+84, 16, an.color);
+    sx += 28;
+  });
+  ctx.restore();
+
+  const bw2=72, bh2=40, brx=pw-PAD-bw2, bry=py+ph/2-bh2/2;
+  ctx.save();
+  ctx.fillStyle = sel.color;
+  roundRect(ctx, brx, bry, bw2, bh2, 8); ctx.fill();
+  ctx.fillStyle = '#fff';
+  ctx.font = '500 13px -apple-system,sans-serif'; ctx.textAlign = 'center';
+  ctx.fillText('Browse', brx+bw2/2, bry+bh2/2+5);
+  ctx.restore();
+  mapCanvas._browseBtn = {x:brx, y:bry, w:bw2, h:bh2};
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
+  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
+  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
+  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
+  ctx.closePath();
+}
+
+function mapClick(evt) {
+  const rect = mapCanvas.getBoundingClientRect();
+  const mx = evt.clientX - rect.left, my = evt.clientY - rect.top;
+  if (mapCanvas._browseBtn) {
+    const b = mapCanvas._browseBtn;
+    if (mx>=b.x && mx<=b.x+b.w && my>=b.y && my<=b.y+b.h) {
+      const sel = mapNodes[mapSelectedCat];
+      document.getElementById('browse-cat-name').textContent = sel.name;
+      drawIconCircle(document.getElementById('browse-cat-icon'), sel.name, sel.color, 32);
+      showView('browse'); return;
+    }
+  }
+  let hit = null;
+  mapNodes.forEach((n,i) => {
+    if (Math.hypot(mx - n.nx*mapW, my - n.ny*mapGraphH) <= n.r+8) hit = i;
+  });
+  if (hit !== null) {
+    if (mapSelectedCat !== hit) playCatTone(hit);
+    mapSelectedCat = (mapSelectedCat===hit) ? null : hit;
+  } else if (my < mapGraphH) mapSelectedCat = null;
+  drawMap();
+}
+
+// ─── BROWSE ──────────────────────────────────────────────────────────
+const SCENES       = ['hill','pond','tree','market','forest'];
+const SCENE_COLORS = ['#8B6B3E','#2E6B9E','#3D7A2E','#A05C2E','#2E5E3E'];
+
+function initBrowse() {
+  const catName = document.getElementById('browse-cat-name').textContent;
+  const catIdx  = CATS.findIndex(c => c.name===catName);
+  if (catIdx >= 0) drawIconCircle(document.getElementById('browse-cat-icon'), catName, CATS[catIdx].color, 32);
+
+  const list = document.getElementById('card-list');
+  list.innerHTML = '';
+  const recs = Array.from({length:6}, (_,i) => ({
+    title:      (CAT_STORIES[catIdx||0])[i % (CAT_STORIES[catIdx||0]).length],
+    scene:      SCENES[i%5],
+    sceneColor: SCENE_COLORS[i%5],
+    dur:        `${2+i%3}:${String((10+i*13)%60).padStart(2,'0')}`,
+    tags:       [CATS[catIdx||0], CATS[(catIdx+3)%12]],
+    annCount:   i+1,
+    listeners:  2+i,
+    wave:       genWave(80, i+1),
+  }));
+
+  recs.forEach((rec) => {
+    const card = document.createElement('div');
+    card.className = 'rec-card';
+
+    const sceneWrap = document.createElement('div');
+    sceneWrap.className = 'scene-canvas-wrap';
+    const sc = document.createElement('canvas'); sc.height = 115;
+    const playBtn = document.createElement('button');
+    playBtn.className = 'play-over-btn'; playBtn.textContent = '▶';
+    playBtn.onclick = () => { playBtn.textContent = playBtn.textContent==='▶'?'⏸':'▶'; };
+    sceneWrap.appendChild(sc); sceneWrap.appendChild(playBtn);
+    card.appendChild(sceneWrap);
+
+    const infoBar = document.createElement('div'); infoBar.className = 'info-bar';
+    const tagIcons = document.createElement('div'); tagIcons.className = 'tag-icons';
+    rec.tags.forEach(t => {
+      const ic = document.createElement('canvas'); ic.style.borderRadius='50%';
+      drawIconCircle(ic, t.name, t.color, 22);
+      tagIcons.appendChild(ic);
+    });
+    infoBar.appendChild(tagIcons);
+
+    const dots = document.createElement('div'); dots.className = 'ann-dots';
+    for (let d = 0; d < Math.min(rec.annCount, 6); d++) {
+      const dot = document.createElement('div'); dot.className = 'ann-dot';
+      dot.style.background = rec.sceneColor; dot.style.opacity = 0.35+d*0.12;
+      dots.appendChild(dot);
+    }
+    infoBar.appendChild(dots);
+    const dur = document.createElement('span'); dur.className = 'card-dur'; dur.textContent = rec.dur;
+    infoBar.appendChild(dur);
+    card.appendChild(infoBar);
+    list.appendChild(card);
+
+    requestAnimationFrame(() => {
+      const w = sc.parentElement.clientWidth;
+      resizeCanvas(sc, w, 115);
+      const ctx = sc.getContext('2d');
+      ctx.scale(sc._dpr, sc._dpr);
+      drawScene(ctx, rec.scene, rec.sceneColor, w, 115);
+      drawSceneWave(ctx, rec.wave, w, 115);
+    });
+  });
+}
+
+function drawScene(ctx, type, color, W, H) {
+  ctx.clearRect(0, 0, W, H);
+  switch (type) {
+    case 'hill': {
+      ctx.fillStyle = '#1A2A3A'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = color+'40';
+      ctx.beginPath(); ctx.moveTo(0,H*0.7);
+      ctx.quadraticCurveTo(W*0.3,H*0.2,W*0.6,H*0.65);
+      ctx.quadraticCurveTo(W*0.8,H*0.8,W,H*0.7);
+      ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = color+'BB';
+      ctx.beginPath(); ctx.moveTo(0,H);
+      ctx.quadraticCurveTo(W*0.15,H*0.45,W*0.42,H*0.38);
+      ctx.quadraticCurveTo(W*0.7,H*0.31,W,H*0.55);
+      ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
+      ctx.fillStyle = '#FFD16699'; ctx.beginPath(); ctx.arc(W*0.85,H*0.18,10,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#09090b'; ctx.beginPath(); ctx.arc(W*0.42,H*0.34,2.5,0,Math.PI*2); ctx.fill();
+      break;
+    }
+    case 'pond': {
+      ctx.fillStyle = '#1A2A1A'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#2E5E3E88';
+      ctx.beginPath(); ctx.ellipse(W/2,H*0.55,W*0.38,H*0.22,0,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle = '#3A7A5ACC';
+      ctx.beginPath(); ctx.ellipse(W/2,H*0.52,W*0.26,H*0.13,0.1,0,Math.PI*2); ctx.fill();
+      [[0.18,0.7],[0.25,0.65],[0.72,0.68],[0.80,0.72]].forEach(([rx,ry]) => {
+        ctx.strokeStyle='#4A7A3E'; ctx.lineWidth=1.5;
+        ctx.beginPath(); ctx.moveTo(W*rx,H*ry+18); ctx.lineTo(W*rx,H*ry-8); ctx.stroke();
+        ctx.fillStyle='#5A8A4E';
+        ctx.beginPath(); ctx.ellipse(W*rx,H*ry-10,2.5,5,0,0,Math.PI*2); ctx.fill();
+      });
+      break;
+    }
+    case 'tree': {
+      ctx.fillStyle = '#0E1A28'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#1A3A1A'; ctx.fillRect(0, H*0.75, W, H*0.25);
+      ctx.fillStyle = '#4A2A18'; ctx.fillRect(W/2-6, H*0.48, 12, H*0.32);
+      [0.68,0.52,0.38].forEach((y,i) => {
+        ctx.fillStyle = ['#2A5A1C','#1E4A12','#144008'][i];
+        ctx.beginPath(); ctx.arc(W/2, H*y, 30-i*4, 0, Math.PI*2); ctx.fill();
+      });
+      break;
+    }
+    case 'market': {
+      ctx.fillStyle = '#2A1E10'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#3A2E1A44';
+      ctx.beginPath(); ctx.moveTo(W*0.35,H); ctx.lineTo(W*0.45,H*0.4); ctx.lineTo(W*0.55,H*0.4); ctx.lineTo(W*0.65,H); ctx.closePath(); ctx.fill();
+      [[0.05,'#C04A20'],[0.65,'#204AC0']].forEach(([sx,sc]) => {
+        ctx.fillStyle = '#4A3A2A'; ctx.fillRect(W*sx, H*0.35, W*0.24, H*0.35);
+        ctx.fillStyle = sc+'88'; ctx.fillRect(W*sx-3, H*0.32, W*0.30, 11);
+      });
+      break;
+    }
+    case 'forest': {
+      ctx.fillStyle = '#0A1A10'; ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#2A2010AA';
+      ctx.beginPath(); ctx.moveTo(W*0.3,H); ctx.lineTo(W*0.42,H*0.38); ctx.lineTo(W*0.58,H*0.38); ctx.lineTo(W*0.7,H); ctx.closePath(); ctx.fill();
+      [[0.08,0.55,0.85],[0.2,0.45,0.75],[0.72,0.5,0.8],[0.85,0.42,0.7]].forEach(([tx,ty,sc]) => {
+        ctx.fillStyle = `rgba(20,60,30,${sc})`;
+        ctx.beginPath();
+        ctx.moveTo(W*tx, H*(ty-0.28*sc));
+        ctx.lineTo(W*(tx-0.1*sc), H*(ty+0.05));
+        ctx.lineTo(W*(tx+0.1*sc), H*(ty+0.05));
+        ctx.closePath(); ctx.fill();
+      });
+      break;
+    }
+  }
+}
+
+// Bottom-anchored waveform overlay on scene cards
+function drawSceneWave(ctx, wave, W, H) {
+  const bh  = 28, nBars = 44;
+  const bw  = (W / nBars) - 0.8;
+  const step = W / nBars;
+  for (let i = 0; i < nBars; i++) {
+    const sIdx  = Math.floor((i/nBars)*wave.length);
+    const amp   = wave[sIdx] * bh * 0.85 + 3;
+    const bx    = i * step + 0.4;
+    ctx.fillStyle   = 'rgba(255,255,255,0.22)';
+    ctx.fillRect(bx, H - amp, bw, amp);
+  }
+}
+
+function setSort(btn) {
+  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+// ─── ANNOTATE ────────────────────────────────────────────────────────
+function initAnnotate() {
+  const cat = currentCat();
+  drawIconCircle(document.getElementById('ann-header-icon'), cat.name, cat.color, 36);
+  buildTagGrid();
+  drawFragCanvas();
+  renderPills();
+}
+
+function buildTagGrid() {
+  const grid = document.getElementById('tag-grid');
+  grid.innerHTML = '';
+  CATS.forEach((cat, catIdx) => {
+    const selected = annSelectedTags.has(cat.name);
+    const btn = document.createElement('button');
+    btn.className = 'tag-btn' + (selected ? ' selected' : '');
+    if (selected) {
+      btn.style.background   = cat.color + '18';
+      btn.style.borderColor  = cat.color;
+      btn.style.color        = cat.color;
+    }
+    const iconName = CAT_LUCIDE[catIdx];
+    btn.innerHTML = `<i data-lucide="${iconName}"></i>${cat.name}`;
+    btn.onclick = () => {
+      annSelectedTags.has(cat.name) ? annSelectedTags.delete(cat.name) : annSelectedTags.add(cat.name);
+      buildTagGrid(); renderPills();
+    };
+    grid.appendChild(btn);
+  });
+  if (window.lucide) lucide.createIcons();
+  // Apply stroke color per icon
+  grid.querySelectorAll('.tag-btn').forEach((btn, i) => {
+    const svg = btn.querySelector('svg');
+    if (!svg) return;
+    svg.style.cssText = `width:14px;height:14px;stroke:${CATS[i].color};fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;`;
+  });
+}
+
+function renderPills() {
+  const pills = document.getElementById('selected-pills');
+  pills.innerHTML = '';
+  if (!annSelectedTags.size) {
+    pills.style.color = '#71717a'; pills.textContent = '(none selected)'; return;
+  }
+  pills.style.color = '';
+  annSelectedTags.forEach(name => {
+    const cat  = CATS.find(c => c.name===name);
+    const pill = document.createElement('span');
+    pill.className = 'pill';
+    pill.style.background   = cat.color + '18';
+    pill.style.color        = cat.color;
+    pill.style.borderColor  = cat.color + '55';
+    pill.textContent = name;
+    pills.appendChild(pill);
+  });
+}
+
+let fragDragging = null;
+
+function drawFragCanvas() {
+  const canvas = document.getElementById('frag-canvas');
+  const W = canvas.parentElement.clientWidth;
+  resizeCanvas(canvas, W, 72);
+  drawWaveFragment(canvas, fragWave, annStart, annEnd, currentCat().color);
+
+  const totalSec = 222;
+  const s = Math.round(annStart*totalSec), e = Math.round(annEnd*totalSec);
+  const fmt = t => `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
+  document.getElementById('frag-time').textContent = `${fmt(s)} → ${fmt(e)}  ·  ${fmt(e-s)} selected`;
+
+  canvas.onpointerdown = fragPointerDown;
+  canvas.onpointermove = fragPointerMove;
+  canvas.onpointerup   = () => { fragDragging = null; };
+}
+
+function fragPointerDown(evt) {
+  const canvas = document.getElementById('frag-canvas');
+  const rect   = canvas.getBoundingClientRect();
+  const mx     = (evt.clientX - rect.left) / canvas._cssW;
+  const thresh = 18 / canvas._cssW;
+  if (Math.abs(mx-annStart) < thresh)      { fragDragging='start'; canvas.setPointerCapture(evt.pointerId); }
+  else if (Math.abs(mx-annEnd) < thresh)   { fragDragging='end';   canvas.setPointerCapture(evt.pointerId); }
+}
+
+function fragPointerMove(evt) {
+  if (!fragDragging) return;
+  const canvas = document.getElementById('frag-canvas');
+  const rect   = canvas.getBoundingClientRect();
+  const mx     = Math.max(0, Math.min(1, (evt.clientX - rect.left) / canvas._cssW));
+  if (fragDragging==='start') annStart = Math.min(mx, annEnd-0.05);
+  else                        annEnd   = Math.max(mx, annStart+0.05);
+  drawFragCanvas();
+}
+
+function toggleRecord() {
+  isRecording = !isRecording;
+  const btn   = document.getElementById('record-btn');
+  btn.className = isRecording ? 'recording' : '';
+  btn.id        = 'record-btn';
+  btn.textContent = isRecording ? '⏹ stop recording' : '🎙 record voice note';
+}
+
+function saveAnnotation() {
+  if (!annSelectedTags.size) { alert('Please select at least one tag.'); return; }
+  const btn = document.getElementById('save-btn');
+  btn.textContent = '✓ saved!'; btn.style.background = '#f59e0b';
+  setTimeout(() => { btn.textContent = 'save annotation'; btn.style.background = ''; }, 2000);
+}
+
+// ─── RESIZE ──────────────────────────────────────────────────────────
+window.addEventListener('resize', () => {
+  const active = document.querySelector('.view.active');
+  if (!active) return;
+  const id = active.id.replace('view-', '');
+  if (id==='dial')     initDial();
+  if (id==='map')      initMap();
+  if (id==='annotate') drawFragCanvas();
+});
+
+initIconCache();
+showView('dial');
+
+// ─── KEYBOARD NAVIGATION ─────────────────────────────────────────────
+document.addEventListener('keydown', e => {
+  // Only active on the dial view
+  if (!document.getElementById('view-dial').classList.contains('active')) return;
+  const nCat = CATS.length;
+  const nSt  = currentStories().length;
+  switch (e.key) {
+    case 'ArrowLeft':
+      e.preventDefault();
+      snapTo('inner', (dialState.catIdx - 1 + nCat) % nCat);
+      break;
+    case 'ArrowRight':
+      e.preventDefault();
+      snapTo('inner', (dialState.catIdx + 1) % nCat);
+      break;
+    case 'ArrowUp':
+      e.preventDefault();
+      snapTo('outer', (dialState.storyIdx - 1 + nSt) % nSt);
+      break;
+    case 'ArrowDown':
+      e.preventDefault();
+      snapTo('outer', (dialState.storyIdx + 1) % nSt);
+      break;
+  }
+});
+</script>
+</body>
+</html>
