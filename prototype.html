@@ -232,15 +232,205 @@
     position: sticky; top: 0;
   }
 
-  /* TAG MAP */
-  #map-header {
-    padding: 14px 16px 10px; border-bottom: 1px solid var(--border);
-    background: var(--bg2); flex-shrink: 0;
+  /* VIDEO PLAYER */
+  #video-player-wrap {
+    display: none;
+    flex-direction: column;
+    margin-bottom: 6px;
   }
-  #map-header h2 { font-size: 17px; font-weight: 500; }
-  #map-header p { font-size: 12px; color: var(--muted); margin-top: 2px; }
-  #map-canvas-wrap { flex: 1; position: relative; overflow: hidden; }
-  #map-canvas { display: block; width: 100%; height: 100%; }
+  #video-player-wrap.active { display: flex; }
+  #video-placeholder {
+    position: relative;
+    width: 100%;
+    height: 46px;
+    background: #000000;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  #video-placeholder.expanded {
+    height: 280px;
+  }
+  #video-placeholder .video-play-overlay {
+    position: relative; z-index: 2;
+    width: 28px; height: 28px; border-radius: 50%;
+    background: rgba(255,255,255,0.85);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    font-size: 12px; color: #09090b;
+  }
+  #video-expand-btn {
+    position: absolute; top: 50%; right: 8px; z-index: 3;
+    transform: translateY(-50%);
+    width: 24px; height: 24px; border-radius: 4px;
+    background: rgba(255,255,255,0.15); border: none;
+    color: #fff; font-size: 13px; cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+  }
+  #video-expand-btn:active { background: rgba(255,255,255,0.3); }
+  #video-timeline-wrap {
+    position: relative; width: 100%;
+  }
+  #video-timeline {
+    width: 100%; height: 46px;
+    cursor: pointer; display: block;
+  }
+  #video-tooltip {
+    display: none;
+    position: absolute; top: calc(100% + 6px);
+    transform: translateX(-50%);
+    background: var(--bg); color: var(--text);
+    font-size: 11px; font-weight: 500;
+    padding: 7px 10px; border-radius: 8px;
+    border: 1px solid var(--border);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.09);
+    white-space: nowrap; pointer-events: none;
+    z-index: 5; min-width: 110px;
+  }
+  #video-tooltip::before {
+    content: ''; position: absolute; bottom: 100%; left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-bottom-color: var(--border);
+  }
+  #video-tooltip::after {
+    content: ''; position: absolute; bottom: calc(100% - 1px); left: 50%;
+    transform: translateX(-50%);
+    border: 4px solid transparent;
+    border-bottom-color: var(--bg);
+  }
+  .media-type-badge {
+    display: inline-flex; align-items: center; gap: 3px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.04em;
+    text-transform: uppercase; color: var(--muted);
+    margin-left: 6px;
+    padding: 1px 6px; border-radius: 4px;
+    background: var(--bg3);
+  }
+
+  /* PETAL MAP */
+  #petal-header {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px;
+    padding-top: max(10px, env(safe-area-inset-top));
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+  }
+  #petal-tag-select {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 10px;
+    border: 1.5px solid var(--border);
+    background: var(--bg);
+    font-size: 14px; font-weight: 500;
+    color: var(--text);
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%2371717a' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    cursor: pointer;
+  }
+  #petal-tag-icon {
+    width: 36px; height: 36px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  #petal-body {
+    flex: 1; display: flex; flex-direction: row;
+    overflow: hidden;
+  }
+  #petal-canvas-wrap { flex: 1; position: relative; overflow: hidden; min-width: 0; }
+  #petal-canvas { display: block; width: 100%; height: 100%; touch-action: none; }
+
+  /* ARCHIVE LIST — right panel */
+  #petal-archives {
+    width: 260px; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    background: var(--bg);
+    border-left: 1px solid var(--border);
+    overflow: hidden;
+  }
+  #petal-archives-header {
+    padding: 10px 12px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+    flex-shrink: 0;
+  }
+  #petal-archives-title {
+    font-size: 13px; font-weight: 600; color: var(--text);
+    display: flex; align-items: center; gap: 6px;
+  }
+  #petal-archives-count {
+    font-size: 11px; color: var(--muted); font-weight: 400;
+  }
+  #petal-archives-list {
+    flex: 1; overflow-y: auto; overscroll-behavior: contain;
+  }
+  .pa-section {
+    padding: 7px 12px 4px;
+    font-size: 10px; font-weight: 600; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--muted);
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+    position: sticky; top: 0; z-index: 1;
+  }
+  .pa-section:first-child { border-top: none; }
+  .pa-section-tags {
+    display: flex; gap: 4px; margin-top: 4px; flex-wrap: wrap;
+  }
+  .pa-section-tag-pill {
+    display: inline-flex; align-items: center; gap: 3px;
+    padding: 2px 7px; border-radius: 10px;
+    font-size: 9px; font-weight: 600; letter-spacing: 0.03em;
+    text-transform: none;
+  }
+  .pa-empty {
+    padding: 14px 12px;
+    font-size: 12px; color: var(--muted); font-style: italic;
+  }
+  .pa-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 9px 12px; cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transition: background 0.12s;
+    border-bottom: 1px solid var(--bg2);
+  }
+  .pa-row:active { background: var(--bg2); }
+  .pa-media-icon {
+    width: 30px; height: 30px; border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px; flex-shrink: 0;
+  }
+  .pa-media-icon.audio { background: var(--bg3); color: var(--muted); }
+  .pa-media-icon.video { background: #4438A422; color: #4438A4; }
+  .pa-body { flex: 1; min-width: 0; }
+  .pa-title {
+    font-size: 13px; font-weight: 400; color: var(--text);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .pa-sub {
+    font-size: 10px; color: var(--muted); margin-top: 1px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .pa-dur {
+    font-size: 11px; color: var(--muted);
+    font-variant-numeric: tabular-nums; flex-shrink: 0;
+  }
+
+  /* On narrow screens, stack vertically */
+  @media (max-width: 500px) {
+    #petal-body { flex-direction: column; }
+    #petal-canvas-wrap { flex: 1; }
+    #petal-archives {
+      width: 100%; max-height: 45%;
+      border-left: none; border-top: 1px solid var(--border);
+    }
+  }
 
   /* ANNOTATE */
   #ann-header {
@@ -366,6 +556,7 @@
 
 <div id="proto-nav">
   <button class="active" onclick="showView('dial')">⟳ Dial</button>
+  <button onclick="showView('petal')">✿ Explore</button>
   <button onclick="showView('annotate')">✦ Annotate</button>
 </div>
 
@@ -378,10 +569,20 @@
       </div>
       <div class="p-meta">
         <div class="p-title" id="player-title">Ragi harvest at Gudibande</div>
-        <div class="p-cat" id="player-cat">Farming</div>
+        <div class="p-cat"><span id="player-cat">Farming</span><span id="player-media-badge" class="media-type-badge">🎧 audio</span></div>
       </div>
       <span class="p-dur" id="player-dur">3:42</span>
       <button id="annotate-btn" onclick="showView('annotate')">+ annotate</button>
+    </div>
+    <div id="video-player-wrap">
+      <div id="video-placeholder" onclick="togglePlay()">
+        <div class="video-play-overlay" id="video-play-icon">▶</div>
+        <button id="video-expand-btn" onclick="event.stopPropagation(); toggleVideoExpand();" title="Expand video">⛶</button>
+      </div>
+      <div id="video-timeline-wrap">
+        <canvas id="video-timeline"></canvas>
+        <div id="video-tooltip"></div>
+      </div>
     </div>
     <div id="wave-wrap">
       <canvas id="wave-player"></canvas>
@@ -437,6 +638,27 @@
   </div>
 </div>
 
+<div id="view-petal" class="view">
+  <div id="petal-header">
+    <div id="petal-tag-icon"></div>
+    <select id="petal-tag-select" onchange="petalSelectTag(this.value)"></select>
+  </div>
+  <div id="petal-body">
+    <div id="petal-canvas-wrap">
+      <canvas id="petal-canvas"></canvas>
+    </div>
+    <div id="petal-archives">
+      <div id="petal-archives-header">
+        <div id="petal-archives-title">
+          <span id="petal-archives-tag-name"></span>
+          <span id="petal-archives-count"></span>
+        </div>
+      </div>
+      <div id="petal-archives-list"></div>
+    </div>
+  </div>
+</div>
+
 <script>
 // ─── DATA ────────────────────────────────────────────────────────────
 const CATS = [
@@ -482,6 +704,14 @@ const CAT_STORIES = [
 ];
 
 function currentStories() { return CAT_STORIES[dialState.catIdx]; }
+
+// Media type: deterministic audio/video assignment per story
+// ~30% of stories are video, based on a hash of the title
+function storyMediaType(catIdx, storyIdx) {
+  const title = CAT_STORIES[catIdx][storyIdx];
+  const hash = (title.charCodeAt(0) * 7 + title.charCodeAt(1) * 13 + title.length * 3) % 10;
+  return hash < 3 ? 'video' : 'audio';
+}
 
 // ─── WAVE GENERATION ─────────────────────────────────────────────────
 // Layered sinusoids produce a smooth, realistic-looking audio envelope.
@@ -940,8 +1170,10 @@ function showView(v) {
   document.querySelectorAll('.view').forEach(el => el.classList.remove('active'));
   document.querySelectorAll('#proto-nav button').forEach(el => el.classList.remove('active'));
   document.getElementById('view-'+v).classList.add('active');
-  document.querySelectorAll('#proto-nav button')[['dial','annotate'].indexOf(v)].classList.add('active');
+  const navOrder = ['dial','petal','annotate'];
+  document.querySelectorAll('#proto-nav button')[navOrder.indexOf(v)].classList.add('active');
   if (v==='dial')     setTimeout(initDial,     30);
+  if (v==='petal')    setTimeout(initPetal,    30);
   if (v==='annotate') setTimeout(initAnnotate, 30);
 }
 
@@ -956,9 +1188,11 @@ function resizeCanvas(canvas, w, h) {
 // ─── DIAL ────────────────────────────────────────────────────────────
 function initDial() {
   const cat = currentCat();
+  const mType = storyMediaType(dialState.catIdx, dialState.storyIdx % currentStories().length);
   drawIconCircle(document.getElementById('player-icon'), cat.name, cat.color, 44);
   document.getElementById('player-title').textContent = currentStories()[dialState.storyIdx % currentStories().length];
   document.getElementById('player-cat').textContent   = cat.name;
+  document.getElementById('player-media-badge').textContent = mType === 'video' ? '🎬 video' : '🎧 audio';
   playerWave = genWave(120, dialState.storyIdx + 1);
   fragWave   = playerWave;
 
@@ -966,7 +1200,26 @@ function initDial() {
   const canvas = document.getElementById('dial-canvas');
   resizeCanvas(canvas, wrap.clientWidth, wrap.clientHeight);
 
+  // toggle video player vs waveform
+  const videoWrap = document.getElementById('video-player-wrap');
+  const waveWrap  = document.getElementById('wave-wrap');
   playerAnnotations = genAnnotations(dialState.storyIdx, dialState.catIdx);
+
+  if (mType === 'video') {
+    videoWrap.classList.add('active');
+    waveWrap.style.display = 'none';
+    // init video timeline
+    const vtc = document.getElementById('video-timeline');
+    vtc.style.width = '';
+    const vtW = vtc.offsetWidth || document.getElementById('dial-player').clientWidth - 28;
+    resizeCanvas(vtc, vtW, vtc.clientHeight || 46);
+    drawWaveSymmetric(vtc, playerWave, playPos, cat.color, playerAnnotations);
+    initVideoTimelineInteraction();
+  } else {
+    videoWrap.classList.remove('active');
+    waveWrap.style.display = '';
+  }
+
   const wc = document.getElementById('wave-player');
   wc.style.width = '';
   const waveW = wc.offsetWidth || document.getElementById('dial-player').clientWidth - 28;
@@ -1067,7 +1320,7 @@ function drawDial() {
     ctx.restore();
   }
 
-  // outer ring: stories for current category
+  // outer ring: stories for current category — with audio/video icons
   const stories = currentStories();
   const nSt = stories.length;
   for (let i = 0; i < nSt; i++) {
@@ -1079,11 +1332,46 @@ function drawDial() {
     const distFrom12 = Math.abs(normA - Math.PI*1.5) / (Math.PI/2*1.1);
     const fade       = Math.max(0, 1 - distFrom12);
     const dotR       = OTW * (0.22 + fade * 0.22);
+    const mType      = storyMediaType(dialState.catIdx, i);
 
     ctx.save();
     ctx.globalAlpha = 0.2 + fade * 0.8;
-    ctx.fillStyle = '#71717a';
+
+    // background circle
+    ctx.fillStyle = mType === 'video' ? '#4438A4' : '#71717a';
     ctx.beginPath(); ctx.arc(sx, sy, dotR, 0, Math.PI*2); ctx.fill();
+
+    // draw audio (headphones) or video (play/film) icon inside the dot
+    const icoS = dotR * 0.7;
+    ctx.strokeStyle = '#ffffff';
+    ctx.fillStyle   = '#ffffff';
+    ctx.lineWidth   = Math.max(1, icoS * 0.15);
+    ctx.lineCap     = 'round';
+    ctx.lineJoin    = 'round';
+
+    if (mType === 'video') {
+      // film/clapperboard icon — small rectangle + triangle play
+      const rw = icoS * 1.2, rh = icoS * 0.85;
+      ctx.strokeStyle = '#ffffff';
+      ctx.lineWidth = Math.max(1, icoS * 0.12);
+      ctx.strokeRect(sx - rw/2, sy - rh/2, rw, rh);
+      // play triangle inside
+      ctx.beginPath();
+      ctx.moveTo(sx - icoS * 0.2, sy - icoS * 0.3);
+      ctx.lineTo(sx + icoS * 0.4, sy);
+      ctx.lineTo(sx - icoS * 0.2, sy + icoS * 0.3);
+      ctx.closePath();
+      ctx.fill();
+    } else {
+      // headphones icon
+      ctx.beginPath();
+      ctx.arc(sx, sy - icoS * 0.1, icoS * 0.55, Math.PI, 0);
+      ctx.stroke();
+      // ear cups
+      ctx.fillRect(sx - icoS * 0.6, sy + icoS * 0.05, icoS * 0.3, icoS * 0.45);
+      ctx.fillRect(sx + icoS * 0.3, sy + icoS * 0.05, icoS * 0.3, icoS * 0.45);
+    }
+
     ctx.shadowBlur = 0;
 
     if (showLabels && fade > 0.35) {
@@ -1098,18 +1386,26 @@ function drawDial() {
   }
 
 
-  // center cap label: show selected category + story
+  // center cap label: Archive (story) above, Tag (category) below
   ctx.save();
   ctx.textAlign = 'center';
   const capLabelR = IR - ITW * 0.55;
   const cat2 = currentCat();
-  ctx.fillStyle = cat2.color;
-  ctx.font = `500 ${Math.round(Math.min(13, capLabelR * 0.2))}px -apple-system,sans-serif`;
-  ctx.fillText(cat2.name, cx, cy - capLabelR * 0.35);
-  ctx.fillStyle = '#71717a';
-  ctx.font = `${Math.round(Math.min(10, capLabelR * 0.15))}px -apple-system,sans-serif`;
   const storyLabel = currentStories()[dialState.storyIdx % currentStories().length];
-  ctx.fillText(storyLabel, cx, cy - capLabelR * 0.15);
+  const mediaType = storyMediaType(dialState.catIdx, dialState.storyIdx % currentStories().length);
+  // Archive name — prominent, top
+  ctx.fillStyle = '#09090b';
+  const archiveFontSize = Math.round(Math.min(13, capLabelR * 0.2));
+  ctx.font = `500 ${archiveFontSize}px -apple-system,sans-serif`;
+  ctx.fillText(storyLabel, cx, cy - capLabelR * 0.38);
+  // "Archive" prefix label — small, above the name
+  ctx.fillStyle = '#a1a1aa';
+  ctx.font = `500 ${Math.round(archiveFontSize * 0.65)}px -apple-system,sans-serif`;
+  ctx.fillText('Archive:', cx, cy - capLabelR * 0.52);
+  // Tag name — below, in category color
+  ctx.fillStyle = cat2.color;
+  ctx.font = `${Math.round(Math.min(10, capLabelR * 0.15))}px -apple-system,sans-serif`;
+  ctx.fillText('Tag: ' + cat2.name, cx, cy - capLabelR * 0.18);
   ctx.restore();
 }
 
@@ -1240,17 +1536,56 @@ function startMomentum(ring) {
 
 function updatePlayerStrip() {
   const cat  = currentCat();
+  const mType = storyMediaType(dialState.catIdx, dialState.storyIdx % currentStories().length);
   playerWave        = genWave(120, dialState.storyIdx + 1);
   fragWave          = playerWave;
   playerAnnotations = genAnnotations(dialState.storyIdx, dialState.catIdx);
   drawIconCircle(document.getElementById('player-icon'), cat.name, cat.color, 44);
   document.getElementById('player-title').textContent = currentStories()[dialState.storyIdx % currentStories().length];
   document.getElementById('player-cat').textContent   = cat.name;
+
+  // media type badge
+  const badge = document.getElementById('player-media-badge');
+  badge.textContent = mType === 'video' ? '🎬 video' : '🎧 audio';
+
+  // toggle video player vs waveform
+  const videoWrap = document.getElementById('video-player-wrap');
+  const waveWrap  = document.getElementById('wave-wrap');
+  if (mType === 'video') {
+    videoWrap.classList.add('active');
+    waveWrap.style.display = 'none';
+    // update video timeline
+    const vtc = document.getElementById('video-timeline');
+    vtc.style.width = '';
+    resizeCanvas(vtc, vtc.offsetWidth || document.getElementById('dial-player').clientWidth - 28, vtc.clientHeight || 46);
+    drawWaveSymmetric(vtc, playerWave, playPos, cat.color, playerAnnotations);
+    initVideoTimelineInteraction();
+  } else {
+    videoWrap.classList.remove('active');
+    waveWrap.style.display = '';
+  }
+
   const wc = document.getElementById('wave-player');
   wc.style.width = '';
   resizeCanvas(wc, wc.offsetWidth, wc.clientHeight || 46);
   drawWaveSymmetric(wc, playerWave, playPos, cat.color, playerAnnotations);
   renderShelf();
+}
+
+// Video player helpers
+function toggleVideoExpand() {
+  const placeholder = document.getElementById('video-placeholder');
+  const btn = document.getElementById('video-expand-btn');
+  const expanded = placeholder.classList.toggle('expanded');
+  btn.textContent = expanded ? '⊗' : '⛶';
+  btn.title = expanded ? 'Collapse video' : 'Expand video';
+  // re-layout dial canvas
+  requestAnimationFrame(() => {
+    const wrap   = document.getElementById('dial-canvas-wrap');
+    const canvas = document.getElementById('dial-canvas');
+    resizeCanvas(canvas, wrap.clientWidth, wrap.clientHeight);
+    drawDial();
+  });
 }
 
 function dialPointerDown(evt) {
@@ -1402,6 +1737,9 @@ function updatePlayerIcon() {
     icon.style.fontSize    = '16px';
     icon.innerHTML = '▶';
   }
+  // also sync video play icon
+  const videoIcon = document.getElementById('video-play-icon');
+  if (videoIcon) videoIcon.textContent = isPlaying ? '⏸' : '▶';
 }
 
 function _clearCountdownRing() {
@@ -1433,6 +1771,13 @@ function _tickPlayback() {
 }
 
 function _updateScrub() {
+  const videoIcon = document.getElementById('video-play-icon');
+  if (videoIcon) videoIcon.textContent = isPlaying ? '⏸' : '▶';
+  // update video timeline if visible
+  const vtc = document.getElementById('video-timeline');
+  if (vtc && vtc._cssW && document.getElementById('video-player-wrap').classList.contains('active')) {
+    drawWaveSymmetric(vtc, playerWave, playPos, currentCat().color, playerAnnotations);
+  }
   const wc = document.getElementById('wave-player');
   if (wc && wc._cssW) drawWaveSymmetric(wc, playerWave, playPos, currentCat().color, playerAnnotations);
 }
@@ -1495,6 +1840,68 @@ function showWaveTooltip(ann, xPx) {
 }
 function hideWaveTooltip() {
   document.getElementById('wave-tooltip').style.display = 'none';
+}
+
+// Video timeline: seek + annotation taps (mirrors wave interaction)
+let _vtInitialized = false;
+function initVideoTimelineInteraction() {
+  const vtc = document.getElementById('video-timeline');
+  if (_vtInitialized) return;
+  _vtInitialized = true;
+  let seeking = false;
+
+  function seekFromEvent(e) {
+    const rect = vtc.getBoundingClientRect();
+    const pos  = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+    playPos      = pos;
+    _playPosBase = pos;
+    _playEpoch   = performance.now();
+    _updateScrub();
+  }
+
+  function checkAnnotationTap(e) {
+    const rect = vtc.getBoundingClientRect();
+    const tapX = e.clientX - rect.left;
+    const tapY = e.clientY - rect.top;
+    const H    = vtc._cssH || rect.height;
+    if (tapY < H - 18) return false;
+    const W = vtc._cssW || rect.width;
+    let hit = null, bestD = 12;
+    playerAnnotations.forEach(ann => {
+      const d = Math.abs(ann.pos * W - tapX);
+      if (d < bestD) { bestD = d; hit = ann; }
+    });
+    if (hit) { showVideoTooltip(hit, hit.pos * W); return true; }
+    hideVideoTooltip();
+    return false;
+  }
+
+  vtc.addEventListener('pointerdown', e => {
+    if (checkAnnotationTap(e)) return;
+    seeking = true;
+    vtc.setPointerCapture(e.pointerId);
+    seekFromEvent(e);
+  });
+  vtc.addEventListener('pointermove', e => { if (seeking) seekFromEvent(e); });
+  vtc.addEventListener('pointerup',   e => { seeking = false; });
+}
+
+let _videoTooltipTimer = null;
+function showVideoTooltip(ann, xPx) {
+  const tip = document.getElementById('video-tooltip');
+  tip.innerHTML = `
+    <div class="tip-label">
+      <span class="tip-dot" style="background:${CATS[ann.catIdx].color}"></span>
+      ${ann.label}
+    </div>
+    <span class="tip-more">read more →</span>`;
+  tip.style.left    = xPx + 'px';
+  tip.style.display = 'block';
+  clearTimeout(_videoTooltipTimer);
+  _videoTooltipTimer = setTimeout(hideVideoTooltip, 3000);
+}
+function hideVideoTooltip() {
+  document.getElementById('video-tooltip').style.display = 'none';
 }
 
 function togglePlay() {
@@ -1671,21 +2078,7 @@ function selectShelfStory(catIdx, storyIdx) {
   startCountdown();
 }
 
-// ─── TAG MAP ─────────────────────────────────────────────────────────
-const NODE_POS = [
-  {name:'Farming',   nx:0.25, ny:0.18},
-  {name:'Water',     nx:0.55, ny:0.10},
-  {name:'Health',    nx:0.20, ny:0.55},
-  {name:'Stories',   nx:0.55, ny:0.38},
-  {name:'Music',     nx:0.78, ny:0.48},
-  {name:'Festivals', nx:0.65, ny:0.25},
-  {name:'Animals',   nx:0.38, ny:0.28},
-  {name:'People',    nx:0.70, ny:0.68},
-  {name:'Places',    nx:0.30, ny:0.72},
-  {name:'Seasons',   nx:0.50, ny:0.68},
-  {name:'Food',      nx:0.18, ny:0.80},
-  {name:'Crafts',    nx:0.80, ny:0.82},
-];
+// ─── PETAL VIEW ──────────────────────────────────────────────────────
 const COUNTS = [124,98,76,143,89,112,67,155,88,72,95,61];
 const EDGES  = [
   [0,1,0.7],[0,6,0.8],[0,9,0.6],[1,8,0.5],[1,9,0.7],[2,4,0.3],
@@ -1693,170 +2086,493 @@ const EDGES  = [
   [6,9,0.6],[7,8,0.5],[7,11,0.4],[8,10,0.6],[9,10,0.5],[10,11,0.3],
 ];
 
-let mapCanvas, mapCtx, mapW, mapH, mapGraphH, mapPanelH, mapNodes = [];
+// Petal state
+let petalCenter   = 0;         // catIdx of the center tag
+let petalPetals   = [];        // [{catIdx, weight, angle, targetAngle, r, targetR}]
+let petalAnimId   = null;
+let petalCanvas, petalCtx, petalW, petalH;
+// Track positions for hit-testing
+let _petalHitZones = [];       // [{catIdx, x, y, r}]
 
-function initMap() {
-  mapCanvas = document.getElementById('map-canvas');
-  const wrap = document.getElementById('map-canvas-wrap');
-  resizeCanvas(mapCanvas, wrap.clientWidth, wrap.clientHeight);
-  mapCtx    = mapCanvas.getContext('2d');
-  mapW      = wrap.clientWidth; mapH = wrap.clientHeight;
-  mapPanelH = Math.round(mapH * 0.28);
-  mapGraphH = mapH - mapPanelH;
-  const minC = Math.min(...COUNTS), maxC = Math.max(...COUNTS);
-  mapNodes  = NODE_POS.map((p,i) => ({
-    ...p, ...CATS[i], count: COUNTS[i],
-    r: 22 + (COUNTS[i]-minC)/(maxC-minC) * 14,
-  }));
-  drawMap();
-  mapCanvas.onclick = mapClick;
+// Get neighbors sorted by weight
+function petalNeighbors(catIdx) {
+  const scores = {};
+  for (const [a, b, w] of EDGES) {
+    if (a === catIdx) scores[b] = (scores[b] || 0) + w;
+    if (b === catIdx) scores[a] = (scores[a] || 0) + w;
+  }
+  return Object.entries(scores)
+    .map(([idx, w]) => ({ catIdx: +idx, w }))
+    .sort((a, b) => b.w - a.w);
 }
 
-function drawMap() {
-  const ctx = mapCtx, dpr = mapCanvas._dpr||1;
-  ctx.setTransform(1,0,0,1,0,0); ctx.scale(dpr,dpr);
-  ctx.clearRect(0, 0, mapW, mapH);
+function initPetal() {
+  petalCanvas = document.getElementById('petal-canvas');
+  const wrap  = document.getElementById('petal-canvas-wrap');
+  const w = wrap.clientWidth  || window.innerWidth;
+  const h = wrap.clientHeight || (window.innerHeight - 60);
+  resizeCanvas(petalCanvas, w, h);
+  petalCtx = petalCanvas.getContext('2d');
+  petalW   = w;
+  petalH   = h;
 
-  ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, mapW, mapH);
-  ctx.fillStyle = '#f4f4f5'; ctx.fillRect(0, mapGraphH, mapW, mapPanelH);
-  ctx.strokeStyle = '#e4e4e7'; ctx.lineWidth = 1;
-  ctx.beginPath(); ctx.moveTo(0, mapGraphH); ctx.lineTo(mapW, mapGraphH); ctx.stroke();
-
-  const sel    = mapSelectedCat !== null ? mapNodes[mapSelectedCat] : null;
-  const adjSet = new Set();
-  if (sel) EDGES.forEach(([a,b]) => {
-    if (a===mapSelectedCat) adjSet.add(b);
-    if (b===mapSelectedCat) adjSet.add(a);
+  // build tag dropdown
+  const sel = document.getElementById('petal-tag-select');
+  sel.innerHTML = '';
+  CATS.forEach((cat, i) => {
+    const opt = document.createElement('option');
+    opt.value = i;
+    opt.textContent = cat.name;
+    if (i === petalCenter) opt.selected = true;
+    sel.appendChild(opt);
   });
+  updatePetalHeader();
 
-  // edges
-  EDGES.forEach(([ai,bi,str]) => {
-    const a = mapNodes[ai], b = mapNodes[bi];
-    const ax = a.nx*mapW, ay = a.ny*mapGraphH;
-    const bx = b.nx*mapW, by = b.ny*mapGraphH;
-    const isAdj = sel && (ai===mapSelectedCat || bi===mapSelectedCat);
-    ctx.save();
-    ctx.strokeStyle = isAdj ? a.color : '#d4d4d8';
-    ctx.lineWidth   = isAdj ? 0.8+str*2.5 : 0.5+str*1.5;
-    ctx.globalAlpha = isAdj ? 0.55 : 0.18;
-    ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(bx,by); ctx.stroke();
-    ctx.restore();
+  buildPetals(petalCenter, false);
+  drawPetal();
+  renderPetalArchives();
+
+  // redraw after icons finish loading (data URIs need a tick)
+  requestAnimationFrame(() => { drawPetal(); });
+  setTimeout(() => { drawPetal(); }, 100);
+
+  petalCanvas.onpointerdown = petalPointerDown;
+}
+
+function updatePetalHeader() {
+  const cat = CATS[petalCenter];
+  drawIconCircle(document.getElementById('petal-tag-icon'), cat.name, cat.color, 36);
+  const sel = document.getElementById('petal-tag-select');
+  sel.value = petalCenter;
+  sel.style.borderColor = cat.color;
+  sel.style.color = cat.color;
+}
+
+function petalSelectTag(val) {
+  const idx = parseInt(val, 10);
+  if (idx === petalCenter) return;
+  _petalHistory = [idx];
+  petalCenter = idx;
+  updatePetalHeader();
+  buildPetals(idx, false);
+  drawPetal();
+  renderPetalArchives();
+  playCatTone(idx);
+}
+
+// Get all tag indices a story is associated with (primary + annotation tags)
+function storyTags(catIdx, storyIdx) {
+  const tags = new Set([catIdx]);
+  const anns = genAnnotations(storyIdx, catIdx);
+  anns.forEach(a => tags.add(a.catIdx));
+  return tags;
+}
+
+// Find all stories across the entire archive that contain ALL given tag indices
+function findSharedArchives(tagIndices) {
+  if (tagIndices.length < 2) return [];
+  const results = [];
+  for (let ci = 0; ci < CAT_STORIES.length; ci++) {
+    CAT_STORIES[ci].forEach((title, si) => {
+      const tags = storyTags(ci, si);
+      if (tagIndices.every(t => tags.has(t))) {
+        results.push({ catIdx: ci, storyIdx: si, title });
+      }
+    });
+  }
+  return results;
+}
+
+function makeArchiveRow(catIdx, storyIdx, title) {
+  const mType = storyMediaType(catIdx, storyIdx);
+  const durSec = (2 + (title.length % 3)) * 60 + ((title.charCodeAt(0) * 13) % 60);
+  const durStr = `${Math.floor(durSec / 60)}:${String(durSec % 60).padStart(2, '0')}`;
+
+  const row = document.createElement('div');
+  row.className = 'pa-row';
+  row.innerHTML = `
+    <div class="pa-media-icon ${mType}">${mType === 'video' ? '🎬' : '🎧'}</div>
+    <div class="pa-body">
+      <div class="pa-title">${title}</div>
+      <div class="pa-sub">
+        <span>${mType}</span>
+        <span>·</span>
+        <span>${durStr}</span>
+      </div>
+    </div>
+    <span class="pa-dur">${durStr}</span>`;
+  row.addEventListener('click', () => {
+    dialState.catIdx = catIdx;
+    dialState.catRot = targetRot('inner', catIdx);
+    dialState.storyIdx = storyIdx;
+    dialState.storyRot = targetRot('outer', storyIdx);
+    showView('dial');
   });
+  return row;
+}
 
-  // nodes
-  mapNodes.forEach((n,i) => {
-    const nx = n.nx*mapW, ny = n.ny*mapGraphH;
-    const isSelected = i===mapSelectedCat;
-    const isAdj      = adjSet.has(i);
-    ctx.save();
-    if (isSelected) { ctx.shadowColor = n.color; ctx.shadowBlur = 22; }
-    ctx.fillStyle   = n.color;
-    ctx.globalAlpha = isSelected ? 1 : isAdj ? 0.45 : 0.12;
-    ctx.beginPath(); ctx.arc(nx, ny, n.r, 0, Math.PI*2); ctx.fill();
-    ctx.shadowBlur  = 0;
-    ctx.strokeStyle = n.color; ctx.lineWidth = isSelected ? 2 : 1.5;
-    ctx.globalAlpha = isSelected ? 1 : isAdj ? 0.7 : 0.35;
-    ctx.beginPath(); ctx.arc(nx, ny, n.r, 0, Math.PI*2); ctx.stroke();
-    if (isSelected) {
-      ctx.globalAlpha = 0.25; ctx.lineWidth = 3;
-      ctx.beginPath(); ctx.arc(nx, ny, n.r+5, 0, Math.PI*2); ctx.stroke();
+function renderPetalArchives() {
+  const cat = CATS[petalCenter];
+  const stories = CAT_STORIES[petalCenter];
+  const list = document.getElementById('petal-archives-list');
+
+  document.getElementById('petal-archives-tag-name').textContent = cat.name;
+  document.getElementById('petal-archives-count').textContent = stories.length + ' archives';
+
+  list.innerHTML = '';
+
+  // ── Shared archives section (when journey has 2+ tags) ──
+  const journeyTags = [...new Set(_petalHistory)];
+  if (journeyTags.length >= 2) {
+    const shared = findSharedArchives(journeyTags);
+
+    const sec = document.createElement('div');
+    sec.className = 'pa-section';
+
+    // label
+    const label = document.createElement('div');
+    label.textContent = 'Shared across journey';
+    sec.appendChild(label);
+
+    // tag pills
+    const pillWrap = document.createElement('div');
+    pillWrap.className = 'pa-section-tags';
+    journeyTags.forEach(ti => {
+      const c = CATS[ti];
+      const pill = document.createElement('span');
+      pill.className = 'pa-section-tag-pill';
+      pill.style.background = c.color + '18';
+      pill.style.color = c.color;
+      pill.textContent = c.name;
+      pillWrap.appendChild(pill);
+    });
+    sec.appendChild(pillWrap);
+    list.appendChild(sec);
+
+    if (shared.length > 0) {
+      shared.forEach(s => list.appendChild(makeArchiveRow(s.catIdx, s.storyIdx, s.title)));
+    } else {
+      const empty = document.createElement('div');
+      empty.className = 'pa-empty';
+      empty.textContent = 'No archives share all these tags yet';
+      list.appendChild(empty);
     }
-    ctx.globalAlpha = isSelected ? 1 : isAdj ? 1 : 0.55;
-    drawCanvasIcon(ctx, CATS.findIndex(c=>c.name===n.name), nx, ny, n.r*1.0, isSelected ? '#ffffff' : n.color);
-    ctx.restore();
-  });
-
-  drawMapPanel(sel, adjSet);
-}
-
-function drawMapPanel(sel, adjSet) {
-  const ctx = mapCtx, py = mapGraphH, pw = mapW, ph = mapPanelH;
-  if (!sel) {
-    ctx.save();
-    ctx.fillStyle = '#71717a';
-    ctx.font      = '13px -apple-system,sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('tap a category to explore', pw/2, py+ph/2);
-    ctx.restore();
-    return;
   }
-  const PAD   = 16;
-  const iconX = PAD+26, iconY = py+ph/2;
-  ctx.save();
-  ctx.fillStyle = sel.color+'28';
-  ctx.beginPath(); ctx.arc(iconX, iconY, 26, 0, Math.PI*2); ctx.fill();
-  drawCanvasIcon(ctx, CATS.findIndex(c=>c.name===sel.name), iconX, iconY, 28, sel.color);
-  ctx.strokeStyle = sel.color; ctx.lineWidth = 1.5;
-  for (let i = 1; i <= 3; i++) {
-    ctx.globalAlpha = 0.2 + i*0.15;
-    ctx.beginPath(); ctx.arc(iconX, iconY, 26+i*8, Math.PI*0.65, Math.PI*1.35); ctx.stroke();
-  }
-  ctx.restore();
 
-  const cx2 = pw/2;
-  ctx.save();
-  ctx.fillStyle = '#09090b';
-  ctx.font      = '500 17px -apple-system,sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText(sel.name, cx2, py+24);
-  ctx.fillStyle = '#71717a'; ctx.font = '12px -apple-system,sans-serif';
-  ctx.fillText(sel.count+' recordings', cx2, py+40);
-  const bw = 100, bh = 3, bx = cx2-bw/2, by2 = py+48;
-  ctx.fillStyle = '#e4e4e7'; ctx.fillRect(bx, by2, bw, bh);
-  ctx.fillStyle = sel.color; ctx.fillRect(bx, by2, bw*(sel.count/Math.max(...COUNTS)), bh);
-  ctx.fillStyle = '#71717a'; ctx.font = '11px -apple-system,sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('also appears with:', cx2, py+66);
-  const adjArr = [...adjSet].slice(0,5);
-  let sx = cx2 - adjArr.length*14 + 11;
-  adjArr.forEach(ai => {
-    const an = mapNodes[ai];
-    ctx.fillStyle = an.color+'28';
-    ctx.beginPath(); ctx.arc(sx, py+84, 11, 0, Math.PI*2); ctx.fill();
-    drawCanvasIcon(ctx, CATS.findIndex(c=>c.name===an.name), sx, py+84, 16, an.color);
-    sx += 28;
+  // ── Current tag archives ──
+  const sec2 = document.createElement('div');
+  sec2.className = 'pa-section';
+  sec2.textContent = cat.name + ' archives';
+  list.appendChild(sec2);
+
+  stories.forEach((title, si) => {
+    list.appendChild(makeArchiveRow(petalCenter, si, title));
   });
-  ctx.restore();
-
-  const bw2=72, bh2=40, brx=pw-PAD-bw2, bry=py+ph/2-bh2/2;
-  ctx.save();
-  ctx.fillStyle = sel.color;
-  roundRect(ctx, brx, bry, bw2, bh2, 8); ctx.fill();
-  ctx.fillStyle = '#fff';
-  ctx.font = '500 13px -apple-system,sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText('Browse', brx+bw2/2, bry+bh2/2+5);
-  ctx.restore();
-  mapCanvas._browseBtn = {x:brx, y:bry, w:bw2, h:bh2};
 }
 
-function roundRect(ctx, x, y, w, h, r) {
-  ctx.beginPath();
-  ctx.moveTo(x+r,y); ctx.lineTo(x+w-r,y); ctx.quadraticCurveTo(x+w,y,x+w,y+r);
-  ctx.lineTo(x+w,y+h-r); ctx.quadraticCurveTo(x+w,y+h,x+w-r,y+h);
-  ctx.lineTo(x+r,y+h); ctx.quadraticCurveTo(x,y+h,x,y+h-r);
-  ctx.lineTo(x,y+r); ctx.quadraticCurveTo(x,y,x+r,y);
-  ctx.closePath();
-}
+// Store the angle/dist of the petal that was tapped so the old center can take its place
+let _petalTappedAngle = null;  // angle of the petal that was just tapped
+let _petalTappedWeight = null; // weight of the petal that was just tapped
+let _petalPrevCenter = null;   // catIdx of the previous center
 
-function mapClick(evt) {
-  const rect = mapCanvas.getBoundingClientRect();
-  const mx = evt.clientX - rect.left, my = evt.clientY - rect.top;
-  if (mapCanvas._browseBtn) {
-    const b = mapCanvas._browseBtn;
-    if (mx>=b.x && mx<=b.x+b.w && my>=b.y && my<=b.y+b.h) {
-      const sel = mapNodes[mapSelectedCat];
-      document.getElementById('browse-cat-name').textContent = sel.name;
-      drawIconCircle(document.getElementById('browse-cat-icon'), sel.name, sel.color, 32);
-      showView('browse'); return;
+function buildPetals(centerIdx, animate) {
+  const prevCenter = petalCenter;
+  const oldPetals  = petalPetals;
+  petalCenter = centerIdx;
+  const neighbors = petalNeighbors(centerIdx);
+  const n = neighbors.length;
+
+  // When animating, the previous center's target angle is locked to
+  // the exact opposite of where the tapped petal was — this is where
+  // the user expects it so they can backtrack.
+  const prevCenterIdx = animate && _petalTappedAngle !== null
+    ? neighbors.findIndex(nb => nb.catIdx === prevCenter) : -1;
+  const lockedAngle = _petalTappedAngle !== null ? _petalTappedAngle : null;
+
+  // Distribute remaining petals evenly, skipping the locked slot
+  // Compute target angles: lock the prev center, spread the rest
+  const targetAngles = new Array(n);
+  if (prevCenterIdx >= 0 && lockedAngle !== null) {
+    targetAngles[prevCenterIdx] = lockedAngle;
+    // distribute remaining n-1 petals evenly across full circle,
+    // starting from the locked angle and skipping it
+    const rest = [];
+    for (let i = 0; i < n; i++) { if (i !== prevCenterIdx) rest.push(i); }
+    const step = (Math.PI * 2) / n;
+    // place others relative to locked angle, offset by one slot
+    rest.forEach((ri, k) => {
+      targetAngles[ri] = lockedAngle + step * (k + 1);
+    });
+  } else {
+    // no lock — even distribution
+    for (let i = 0; i < n; i++) {
+      targetAngles[i] = -Math.PI / 2 + (i / n) * Math.PI * 2;
     }
   }
-  let hit = null;
-  mapNodes.forEach((n,i) => {
-    if (Math.hypot(mx - n.nx*mapW, my - n.ny*mapGraphH) <= n.r+8) hit = i;
+
+  petalPetals = neighbors.map((nb, i) => {
+    const isPrevCenter = animate && nb.catIdx === prevCenter && lockedAngle !== null;
+    const old = animate ? oldPetals.find(p => p.catIdx === nb.catIdx) : null;
+
+    let startAngle, startScale;
+    if (!animate) {
+      startAngle = targetAngles[i];
+      startScale = 1;
+    } else if (isPrevCenter) {
+      // start at the locked position (it's already where it should be)
+      startAngle = lockedAngle;
+      startScale = 1;
+    } else if (old) {
+      startAngle = old.angle;
+      startScale = old.scale;
+    } else {
+      startAngle = targetAngles[i] + Math.PI * 0.5;
+      startScale = 0.15;
+    }
+
+    return {
+      catIdx:      nb.catIdx,
+      weight:      nb.w,
+      angle:       startAngle,
+      targetAngle: targetAngles[i],
+      scale:       startScale,
+      targetScale: 1,
+    };
   });
-  if (hit !== null) {
-    if (mapSelectedCat !== hit) playCatTone(hit);
-    mapSelectedCat = (mapSelectedCat===hit) ? null : hit;
-  } else if (my < mapGraphH) mapSelectedCat = null;
-  drawMap();
+
+  _petalTappedAngle  = null;
+  _petalTappedWeight = null;
+  _petalPrevCenter   = null;
+
+  if (animate) animatePetals();
+}
+
+function animatePetals() {
+  if (petalAnimId) cancelAnimationFrame(petalAnimId);
+  const t0  = performance.now();
+  const DUR = 450;
+
+  // snapshot start values
+  const starts = petalPetals.map(p => ({ angle: p.angle, scale: p.scale }));
+
+  function frame(now) {
+    const t    = Math.min(1, (now - t0) / DUR);
+    const ease = 1 - Math.pow(1 - t, 3); // cubic ease-out
+
+    petalPetals.forEach((p, i) => {
+      p.angle = starts[i].angle + (p.targetAngle - starts[i].angle) * ease;
+      p.scale = starts[i].scale + (p.targetScale - starts[i].scale) * ease;
+    });
+
+    drawPetal();
+
+    if (t < 1) petalAnimId = requestAnimationFrame(frame);
+    else petalAnimId = null;
+  }
+  petalAnimId = requestAnimationFrame(frame);
+}
+
+function drawPetal() {
+  const ctx = petalCtx;
+  const dpr = petalCanvas._dpr || 1;
+  const W = petalW, H = petalH;
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.scale(dpr, dpr);
+  ctx.clearRect(0, 0, W, H);
+
+  // background
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, W, H);
+
+  const cx = W / 2;
+  const cy = H * 0.45;
+  const orbitR = Math.min(W, H) * 0.30;
+
+  // center node sizing
+  const centerR = Math.min(W, H) * 0.12;
+  const centerCat = CATS[petalCenter];
+
+  _petalHitZones = [];
+
+  // draw connecting lines from center to each petal (behind everything)
+  petalPetals.forEach(p => {
+    const pr = (24 + p.weight * 18) * p.scale;
+    const dist = orbitR * (0.7 + p.weight * 0.4) * p.scale;
+    const px = cx + Math.cos(p.angle) * dist;
+    const py = cy + Math.sin(p.angle) * dist;
+
+    ctx.save();
+    ctx.globalAlpha = 0.12 + p.weight * 0.15;
+    ctx.strokeStyle = CATS[p.catIdx].color;
+    ctx.lineWidth   = 1.5 + p.weight * 2.5;
+    ctx.lineCap     = 'round';
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(px, py);
+    ctx.stroke();
+    ctx.restore();
+  });
+
+  // draw petals
+  petalPetals.forEach(p => {
+    const cat  = CATS[p.catIdx];
+    const pr   = (24 + p.weight * 18) * p.scale;
+    const dist = orbitR * (0.7 + p.weight * 0.4) * p.scale;
+    const px   = cx + Math.cos(p.angle) * dist;
+    const py   = cy + Math.sin(p.angle) * dist;
+
+    _petalHitZones.push({ catIdx: p.catIdx, x: px, y: py, r: Math.max(pr, 28) });
+
+    // outer glow
+    ctx.save();
+    ctx.globalAlpha = 0.15 * p.scale;
+    ctx.fillStyle = cat.color;
+    ctx.beginPath(); ctx.arc(px, py, pr + 6, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // filled circle
+    ctx.save();
+    ctx.globalAlpha = (0.25 + p.weight * 0.35) * p.scale;
+    ctx.fillStyle = cat.color;
+    ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+
+    // border
+    ctx.save();
+    ctx.globalAlpha = (0.5 + p.weight * 0.5) * p.scale;
+    ctx.strokeStyle = cat.color;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+
+    // icon
+    ctx.save();
+    ctx.globalAlpha = p.scale;
+    drawCanvasIcon(ctx, p.catIdx, px, py, pr * 0.9, cat.color);
+    ctx.restore();
+  });
+
+  // center: pulse ring
+  ctx.save();
+  ctx.globalAlpha = 0.08;
+  ctx.fillStyle = centerCat.color;
+  ctx.beginPath(); ctx.arc(cx, cy, centerR + 12, 0, Math.PI * 2); ctx.fill();
+  ctx.restore();
+
+  // center: filled circle
+  ctx.save();
+  ctx.shadowColor = centerCat.color;
+  ctx.shadowBlur  = 28;
+  ctx.fillStyle   = centerCat.color;
+  ctx.beginPath(); ctx.arc(cx, cy, centerR, 0, Math.PI * 2); ctx.fill();
+  ctx.shadowBlur  = 0;
+  // border
+  ctx.strokeStyle = centerCat.color;
+  ctx.lineWidth   = 3;
+  ctx.beginPath(); ctx.arc(cx, cy, centerR, 0, Math.PI * 2); ctx.stroke();
+  ctx.restore();
+
+  // center icon (white)
+  ctx.save();
+  drawCanvasIcon(ctx, petalCenter, cx, cy, centerR * 0.85, '#ffffff');
+  ctx.restore();
+
+  _petalHitZones.push({ catIdx: petalCenter, x: cx, y: cy, r: centerR });
+
+  // recording count below center
+  ctx.save();
+  ctx.fillStyle = '#71717a';
+  ctx.font = '12px -apple-system,sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText(COUNTS[petalCenter] + ' archives', cx, cy + centerR + 24);
+  ctx.restore();
+
+  // breadcrumb trail at bottom — show path of exploration
+  if (_petalHistory.length > 1) {
+    const trailY = H - 36;
+    const trailR = 14;
+    const trailGap = 36;
+    const trailW = (_petalHistory.length - 1) * trailGap;
+    let tx = cx - trailW / 2;
+
+    ctx.save();
+    // connecting line
+    ctx.strokeStyle = '#d4d4d8';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(tx, trailY);
+    ctx.lineTo(tx + trailW, trailY);
+    ctx.stroke();
+
+    _petalHistory.forEach((hIdx, i) => {
+      const hCat = CATS[hIdx];
+      const isCurrent = i === _petalHistory.length - 1;
+      ctx.globalAlpha = isCurrent ? 1 : 0.4;
+      ctx.fillStyle = hCat.color;
+      ctx.beginPath(); ctx.arc(tx, trailY, isCurrent ? trailR + 2 : trailR, 0, Math.PI * 2); ctx.fill();
+      drawCanvasIcon(ctx, hIdx, tx, trailY, (isCurrent ? trailR + 2 : trailR) * 0.85, isCurrent ? '#ffffff' : '#ffffff');
+
+      // hit zone for trail items (to go back)
+      if (!isCurrent) {
+        _petalHitZones.push({ catIdx: hIdx, x: tx, y: trailY, r: trailR + 6, isTrail: true, trailIdx: i });
+      }
+
+      tx += trailGap;
+    });
+    ctx.restore();
+  }
+}
+
+// Exploration history
+let _petalHistory = [0];
+
+function petalNavigateTo(catIdx) {
+  if (catIdx === petalCenter) return;
+
+  // capture the tapped petal's exact angle before rebuilding
+  const tapped = petalPetals.find(p => p.catIdx === catIdx);
+  if (tapped) {
+    _petalTappedAngle  = tapped.angle;
+    _petalTappedWeight = tapped.weight;
+  }
+  _petalPrevCenter = petalCenter;
+
+  // speak the name
+  playCatTone(catIdx);
+
+  // if going back in history, trim forward
+  const histPos = _petalHistory.indexOf(catIdx);
+  if (histPos >= 0) {
+    _petalHistory = _petalHistory.slice(0, histPos + 1);
+  } else {
+    _petalHistory.push(catIdx);
+    // keep history manageable
+    if (_petalHistory.length > 8) _petalHistory.shift();
+  }
+
+  buildPetals(catIdx, true);
+  updatePetalHeader();
+  renderPetalArchives();
+}
+
+function petalPointerDown(evt) {
+  const rect = petalCanvas.getBoundingClientRect();
+  const mx = evt.clientX - rect.left;
+  const my = evt.clientY - rect.top;
+
+  // check hit zones (reverse order so topmost items are checked first)
+  for (let i = _petalHitZones.length - 1; i >= 0; i--) {
+    const z = _petalHitZones[i];
+    if (Math.hypot(mx - z.x, my - z.y) <= z.r + 8) {
+      if (z.catIdx === petalCenter && !z.isTrail) {
+        // tapped center — just speak name
+        playCatTone(petalCenter);
+      } else {
+        petalNavigateTo(z.catIdx);
+      }
+      return;
+    }
+  }
 }
 
 // ─── BROWSE ──────────────────────────────────────────────────────────
@@ -2130,7 +2846,7 @@ window.addEventListener('resize', () => {
   if (!active) return;
   const id = active.id.replace('view-', '');
   if (id==='dial')     initDial();
-  if (id==='map')      initMap();
+  if (id==='petal')    initPetal();
   if (id==='annotate') drawFragCanvas();
 });
 
