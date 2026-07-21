@@ -1,0 +1,8 @@
+.DS_Store
+db/*.sqlite3
+db/*.sqlite3-*
+.bundle/
+vendor/bundle/
+
+# Janastu's internal design spec — not ours to publish.
+PLASMA_design_document.docx

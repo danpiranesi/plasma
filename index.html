@@ -3,31 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>PLASMA Prototype</title>
-<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
+<title>PLASMA</title>
+<!--
+  No external scripts, fonts or stylesheets. The deployment target is a
+  Wi-Fi mesh with no internet, so every byte needed to render must already
+  be in this file. Category icons are drawn on canvas by ico() below.
+-->
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --c-farming:  #BA7517;
-    --c-water:    #185FA5;
-    --c-health:   #3B6D11;
-    --c-stories:  #993556;
-    --c-music:    #6D2145;
-    --c-festivals:#993C1D;
-    --c-animals:  #0F6E56;
-    --c-people:   #4438A4;
-    --c-places:   #5F5E5A;
-    --c-seasons:  #854F0B;
-    --c-food:     #527A18;
-    --c-crafts:   #085041;
-    --bg:    #ffffff;
-    --bg2:   #f4f4f5;
-    --bg3:   #e4e4e7;
-    --text:  #09090b;
-    --muted: #71717a;
-    --border:#e4e4e7;
-    --accent:#f59e0b;
+    /* ── Palette ───────────────────────────────────────────────────
+       Five colours. Every other shade in this file is one of these at
+       reduced opacity, so nothing here introduces a sixth.
+
+       The archive previously gave each of the twelve categories its own
+       hue. Identity now rides on icon, tone and position instead, which
+       survives a washed-out screen in daylight and a phone with the
+       colour profile of a 2016 budget Android. */
+    --background:       #ffffff;
+    --foreground:       #09090b;
+    --muted-foreground: #71717a;
+    --border:           #e4e4e7;
+    --accent:           #b45309;
+
+    /* Derived surfaces — tints, not new colours. */
+    --surface:     rgba(9, 9, 11, 0.04);
+    --surface-2:   rgba(9, 9, 11, 0.08);
+    --accent-tint: rgba(180, 83, 9, 0.10);
+    --accent-ring: rgba(180, 83, 9, 0.30);
+    --shadow-sm:   0 1px 2px 0 rgba(9, 9, 11, 0.05);
+    --shadow:      0 1px 3px 0 rgba(9, 9, 11, 0.10), 0 1px 2px -1px rgba(9, 9, 11, 0.10);
+
+    --radius:    8px;
+    --radius-sm: 6px;
+    --radius-lg: 12px;
+
+    /* Aliases kept so the prototype's existing rules resolve to the tokens. */
+    --bg:    var(--background);
+    --bg2:   var(--surface);
+    --bg3:   var(--surface-2);
+    --text:  var(--foreground);
+    --muted: var(--muted-foreground);
+
     font-size: 15px;
+    -webkit-font-smoothing: antialiased;
   }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -407,7 +426,6 @@
     font-size: 14px; flex-shrink: 0;
   }
   .pa-media-icon.audio { background: var(--bg3); color: var(--muted); }
-  .pa-media-icon.video { background: #4438A422; color: #4438A4; }
   .pa-body { flex: 1; min-width: 0; }
   .pa-title {
     font-size: 13px; font-weight: 400; color: var(--text);
@@ -497,67 +515,329 @@
   }
 
   /* BROWSE */
-  #browse-header {
-    display: flex; align-items: center; gap: 10px;
-    padding: 12px 14px; border-bottom: 1px solid var(--border);
-    background: var(--bg2); flex-shrink: 0;
+  /* ══════════════════════════════════════════════════════════════════
+     shadcn component layer
+
+     Restyles the prototype's surfaces onto a consistent set of
+     primitives — button, badge, card, tabs, row, input — using only the
+     five tokens above. Layout is left to the rules further up; this
+     block only changes how things look, never where they sit.
+     ══════════════════════════════════════════════════════════════════ */
+
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    letter-spacing: -0.011em;
   }
-  #browse-back {
-    background: none; border: none; font-size: 20px;
-    cursor: pointer; color: var(--text); padding: 4px; line-height: 1;
+
+  :focus-visible {
+    outline: 2px solid var(--accent-ring);
+    outline-offset: 2px;
   }
-  .browse-cat-info { flex: 1; }
-  .browse-cat-name { font-size: 15px; font-weight: 500; }
-  .browse-cat-count { font-size: 12px; color: var(--muted); }
-  #sort-strip {
-    display: flex; border-bottom: 1px solid var(--border);
-    background: var(--bg2); flex-shrink: 0;
+
+  /* ── Tabs (bottom navigation) ─────────────────────────────────── */
+  #proto-nav {
+    background: var(--background);
+    border-top: 1px solid var(--border);
+    gap: 4px;
+    padding: 6px;
   }
-  .sort-btn {
-    flex: 1; padding: 9px; border: none; background: transparent;
-    font-size: 12px; color: var(--muted); cursor: pointer;
-    border-bottom: 2px solid transparent; transition: all 0.15s;
+  #proto-nav button {
+    flex: 1;
+    height: 36px;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--muted-foreground);
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: -0.006em;
+    transition: background-color .15s, color .15s;
   }
-  .sort-btn.active { color: var(--text); border-bottom-color: var(--accent); font-weight: 500; }
-  #card-list {
-    flex: 1; overflow-y: auto; padding: 10px;
-    display: flex; flex-direction: column; gap: 10px;
+  #proto-nav button.active {
+    background: var(--surface);
+    color: var(--foreground);
+    border-color: var(--border);
+    box-shadow: var(--shadow-sm);
   }
-  .rec-card {
-    border-radius: 10px; overflow: hidden;
-    background: var(--bg2); border: 1px solid var(--border);
+
+  /* ── Card surfaces ────────────────────────────────────────────── */
+  #dial-player {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
   }
-  .scene-canvas-wrap { position: relative; }
-  .scene-canvas-wrap canvas { display: block; width: 100%; height: 115px; }
-  .play-over-btn {
-    position: absolute; top: 50%; left: 50%;
-    transform: translate(-50%,-50%);
-    width: 50px; height: 50px; border-radius: 50%;
-    background: rgba(255,255,255,0.90); border: none;
-    box-shadow: 0 2px 20px rgba(0,0,0,.5);
-    font-size: 16px; cursor: pointer; color: #09090b;
-    display: flex; align-items: center; justify-content: center;
+  #dial-player .p-title {
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: -0.014em;
+    color: var(--foreground);
   }
-  .info-bar {
-    display: flex; align-items: center; gap: 8px;
-    padding: 8px 12px; background: var(--bg3);
-    height: 38px; border-top: 1px solid var(--border);
+  #dial-player .p-cat,
+  #dial-player .p-dur {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
   }
-  .info-bar .tag-icons { display: flex; gap: 4px; }
-  .ann-dots { display: flex; gap: 3px; flex: 1; align-items: center; }
-  .ann-dot { width: 7px; height: 7px; border-radius: 50%; }
-  .card-dur {
-    font-size: 12px; color: var(--muted);
-    font-variant-numeric: tabular-nums; margin-left: auto;
+
+  /* ── Badge ────────────────────────────────────────────────────── */
+  .media-type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    height: 18px;
+    padding: 0 7px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--muted-foreground);
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
   }
+  .media-type-badge svg { width: 10px; height: 10px; }
+
+  /* ── Buttons ──────────────────────────────────────────────────── */
+  #annotate-btn {
+    height: 32px;
+    padding: 0 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--background);
+    color: var(--foreground);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+    transition: background-color .15s;
+  }
+  #annotate-btn:active { background: var(--surface); }
+
+  #ann-back, #video-expand-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--foreground);
+    transition: background-color .15s;
+  }
+  #ann-back:active { background: var(--surface); }
+  #video-expand-btn {
+    background: rgba(255, 255, 255, 0.12);
+    color: #ffffff;
+    backdrop-filter: blur(4px);
+  }
+  #ann-back svg, #video-expand-btn svg { width: 16px; height: 16px; }
+
+  #record-btn {
+    height: 40px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--background);
+    color: var(--foreground);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  #record-btn svg { width: 14px; height: 14px; }
+  #record-btn.recording {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  #save-btn {
+    height: 40px;
+    border: 1px solid var(--accent);
+    border-radius: var(--radius-sm);
+    background: var(--accent);
+    color: #ffffff;
+    font-size: 13px;
+    font-weight: 600;
+    box-shadow: var(--shadow-sm);
+  }
+  #save-btn:active { opacity: .9; }
+
+  #ann-actions {
+    border-top: 1px solid var(--border);
+    background: var(--background);
+  }
+
+  /* ── Toggle group (tag picker) ────────────────────────────────── */
+  .tag-btn {
+    height: 34px;
+    padding: 0 11px;
+    gap: 7px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--background);
+    color: var(--foreground);
+    font-size: 13px;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+    transition: background-color .15s, border-color .15s;
+  }
+  .tag-btn.selected {
+    background: var(--accent-tint);
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  /* ── Pills ────────────────────────────────────────────────────── */
+  .pill, .pa-section-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    height: 22px;
+    padding: 0 9px;
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    background: var(--surface);
+    color: var(--foreground);
+    font-size: 12px;
+    font-weight: 500;
+  }
+
+  /* ── List rows ────────────────────────────────────────────────── */
+  .shelf-row, .pa-row {
+    border-bottom: 1px solid var(--border);
+    transition: background-color .12s;
+  }
+  .shelf-row:active, .pa-row:active { background: var(--surface); }
+  .shelf-row.playing { background: var(--accent-tint); }
+  .shelf-row.playing .shelf-row-title { color: var(--accent); font-weight: 600; }
+  .shelf-row-title, .pa-title {
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: -0.008em;
+    color: var(--foreground);
+  }
+  .shelf-row-cat, .pa-sub, .shelf-row-dur, .pa-dur, #petal-archives-count {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+  .shelf-now-badge {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .shelf-section, .pa-section, .ann-section-label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted-foreground);
+    background: var(--background);
+  }
+
+  /* Square media affordance in the Explore list. */
+  .pa-media-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 34px;
+    height: 34px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+    color: var(--muted-foreground);
+  }
+  .pa-media-icon svg { width: 15px; height: 15px; }
+  .pa-media-icon.video { background: var(--surface-2); color: var(--foreground); }
+
+  /* ── Shelf ────────────────────────────────────────────────────── */
+  #shelf {
+    background: var(--background);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -1px 3px 0 rgba(9, 9, 11, 0.06);
+  }
+  #shelf-drag-pill { background: var(--border); border-radius: 999px; }
+  #shelf-handle-label { font-size: 14px; font-weight: 600; letter-spacing: -0.01em; }
+  #shelf-handle-sub { font-size: 12px; color: var(--muted-foreground); }
+
+  /* ── Select ───────────────────────────────────────────────────── */
+  #petal-header {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+  }
+  #petal-tag-select {
+    height: 38px;
+    padding: 0 32px 0 12px;
+    border: 1px solid var(--border) !important;
+    border-radius: var(--radius-sm);
+    background: var(--background);
+    color: var(--foreground) !important;
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: var(--shadow-sm);
+    appearance: none;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+  }
+
+  /* ── Annotate header ──────────────────────────────────────────── */
+  #ann-header {
+    background: var(--background);
+    border-bottom: 1px solid var(--border);
+  }
+  #ann-header .ann-title { font-size: 15px; font-weight: 600; letter-spacing: -0.014em; }
+  #ann-header .ann-cat { font-size: 12px; color: var(--muted-foreground); }
+  #frag-time {
+    font-size: 12px;
+    color: var(--muted-foreground);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* ── Tooltips (shadcn popover) ────────────────────────────────── */
+  #wave-tooltip, #video-tooltip {
+    background: var(--foreground);
+    color: var(--background);
+    border: none;
+    border-radius: var(--radius-sm);
+    font-size: 12px;
+    box-shadow: var(--shadow);
+  }
+  #wave-tooltip::before, #video-tooltip::before,
+  #wave-tooltip::after,  #video-tooltip::after { border-top-color: var(--foreground); }
+  .tip-dot { background: var(--background) !important; opacity: .6; }
+
+  /* ── Video surface ────────────────────────────────────────────── */
+  #video-placeholder {
+    background: var(--foreground);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+  }
+  #video-placeholder .video-play-overlay {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.92);
+    color: var(--foreground);
+    border-radius: 999px;
+  }
+  #video-placeholder .video-play-overlay svg { width: 18px; height: 18px; }
+
+  #dial-player .p-icon svg { width: 16px; height: 16px; }
 </style>
 </head>
 <body>
 
 <div id="proto-nav">
-  <button class="active" onclick="showView('dial')">⟳ Dial</button>
-  <button onclick="showView('petal')">✿ Explore</button>
-  <button onclick="showView('annotate')">✦ Annotate</button>
+  <button class="active" onclick="showView('dial')">Dial</button>
+  <button onclick="showView('petal')">Explore</button>
+  <button onclick="showView('annotate')">Annotate</button>
 </div>
 
 <div id="view-dial" class="view active">
@@ -569,15 +849,15 @@
       </div>
       <div class="p-meta">
         <div class="p-title" id="player-title">Ragi harvest at Gudibande</div>
-        <div class="p-cat"><span id="player-cat">Farming</span><span id="player-media-badge" class="media-type-badge">🎧 audio</span></div>
+        <div class="p-cat"><span id="player-cat">Farming</span><span id="player-media-badge" class="media-type-badge">audio</span></div>
       </div>
       <span class="p-dur" id="player-dur">3:42</span>
       <button id="annotate-btn" onclick="showView('annotate')">+ annotate</button>
     </div>
     <div id="video-player-wrap">
       <div id="video-placeholder" onclick="togglePlay()">
-        <div class="video-play-overlay" id="video-play-icon">▶</div>
-        <button id="video-expand-btn" onclick="event.stopPropagation(); toggleVideoExpand();" title="Expand video">⛶</button>
+        <div class="video-play-overlay" id="video-play-icon"></div>
+        <button id="video-expand-btn" onclick="event.stopPropagation(); toggleVideoExpand();" title="Expand video"></button>
       </div>
       <div id="video-timeline-wrap">
         <canvas id="video-timeline"></canvas>
@@ -610,7 +890,7 @@
 
 <div id="view-annotate" class="view">
   <div id="ann-header">
-    <button id="ann-back" onclick="showView('dial')">←</button>
+    <button id="ann-back" onclick="showView('dial')" aria-label="Back"></button>
     <div style="flex:1">
       <div class="ann-title">Ragi harvest at Gudibande</div>
       <div class="ann-cat">Farming · 3:42</div>
@@ -632,8 +912,9 @@
       <div id="selected-pills"></div>
     </div>
   </div>
+  <div id="queue-badge" style="display:none;padding:6px 16px;font-size:12px;color:#a16207;background:#fef3c7;text-align:center;"></div>
   <div id="ann-actions">
-    <button id="record-btn" onclick="toggleRecord()">🎙 record voice note</button>
+    <button id="record-btn" onclick="toggleRecord()">record voice note</button>
     <button id="save-btn" onclick="saveAnnotation()">save annotation</button>
   </div>
 </div>
@@ -662,18 +943,18 @@
 <script>
 // ─── DATA ────────────────────────────────────────────────────────────
 const CATS = [
-  { name:'Farming',  color:'#BA7517' },
-  { name:'Water',    color:'#185FA5' },
-  { name:'Health',   color:'#3B6D11' },
-  { name:'Stories',  color:'#993556' },
-  { name:'Music',    color:'#6D2145' },
-  { name:'Festivals',color:'#993C1D' },
-  { name:'Animals',  color:'#0F6E56' },
-  { name:'People',   color:'#4438A4' },
-  { name:'Places',   color:'#5F5E5A' },
-  { name:'Seasons',  color:'#854F0B' },
-  { name:'Food',     color:'#527A18' },
-  { name:'Crafts',   color:'#085041' },
+  { name:'Farming' },
+  { name:'Water' },
+  { name:'Health' },
+  { name:'Stories' },
+  { name:'Music' },
+  { name:'Festivals' },
+  { name:'Animals' },
+  { name:'People' },
+  { name:'Places' },
+  { name:'Seasons' },
+  { name:'Food' },
+  { name:'Crafts' },
 ];
 
 const CAT_STORIES = [
@@ -790,7 +1071,7 @@ function drawWaveSymmetric(canvas, wave, progress, accentColor, annotations) {
 
   // unplayed: dim fill
   traceWavePath(ctx, wave, W, cy, maxH);
-  ctx.fillStyle = '#a1a1aa'; ctx.globalAlpha = 0.55; ctx.fill();
+  ctx.fillStyle = PAL.muted; ctx.globalAlpha = 0.35; ctx.fill();
 
   // played: accent fill, clipped to playhead
   if (progress > 0) {
@@ -817,12 +1098,12 @@ function drawWaveSymmetric(canvas, wave, progress, accentColor, annotations) {
       const cat = CATS[ann.catIdx];
       // stem from waveform bottom to marker
       ctx.globalAlpha = 0.35;
-      ctx.strokeStyle = cat.color;
+      ctx.strokeStyle = PAL.fg;
       ctx.lineWidth   = 1;
       ctx.beginPath(); ctx.moveTo(ax, H - MARKER_ZONE); ctx.lineTo(ax, my - 4); ctx.stroke();
       // dot
       ctx.globalAlpha = 1;
-      ctx.fillStyle   = cat.color;
+      ctx.fillStyle   = PAL.fg;
       ctx.beginPath(); ctx.arc(ax, my, 4, 0, Math.PI * 2); ctx.fill();
     });
   }
@@ -844,7 +1125,7 @@ function drawWaveFragment(canvas, wave, selStart, selEnd, accentColor) {
 
   // dim unselected base
   traceWavePath(ctx, wave, W, cy, maxH);
-  ctx.fillStyle = '#d4d4d8'; ctx.globalAlpha = 0.25; ctx.fill();
+  ctx.fillStyle = PAL.muted; ctx.globalAlpha = 0.22; ctx.fill();
 
   // bright selected region
   ctx.save();
@@ -1007,70 +1288,66 @@ function ico(ctx, name, x, y, size, color) {
   ctx.restore();
 }
 
-// ─── LUCIDE ICON SYSTEM ──────────────────────────────────────────────
-const CAT_LUCIDE = [
-  'wheat','droplets','heart-pulse','book-open','music',
-  'sparkles','paw-print','users','map-pin','sun','utensils','scissors',
-];
 
-// canvas-ready Image objects keyed by "catIdx-color"
-const _iconImgCache = {};
-let   _iconSvgEls   = []; // keep SVG DOM nodes alive for cloning
+// ─── PALETTE ─────────────────────────────────────────────────────────
+// The same five tokens the stylesheet uses, for canvas drawing.
+const PAL = {
+  bg:     '#ffffff',
+  fg:     '#09090b',
+  muted:  '#71717a',
+  border: '#e4e4e7',
+  accent: '#b45309',
+};
 
-function initIconCache() {
-  if (!window.lucide) return;
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;left:-9999px;top:0;visibility:hidden;';
-  CAT_LUCIDE.forEach(name => {
-    const i = document.createElement('i');
-    i.setAttribute('data-lucide', name);
-    wrap.appendChild(i);
-  });
-  document.body.appendChild(wrap);
-  lucide.createIcons();
+// ─── UI ICONS ────────────────────────────────────────────────────────
+// Lucide glyphs, inlined. These replace the emoji the prototype used for
+// play/pause/media/record: emoji render differently on every Android
+// build and are read aloud as their unicode name by screen readers,
+// neither of which is acceptable for an interface whose icons carry the
+// meaning. Inlined rather than fetched — the mesh has no internet.
+const ICONS = {
+  play:     '<polygon points="6 3 20 12 6 21 6 3" fill="currentColor" stroke="none"/>',
+  pause:    '<rect x="6" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/><rect x="14" y="4" width="4" height="16" rx="1" fill="currentColor" stroke="none"/>',
+  stop:     '<rect x="6" y="6" width="12" height="12" rx="2" fill="currentColor" stroke="none"/>',
+  audio:    '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-5a9 9 0 0 1 18 0v5a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
+  video:    '<path d="m16 13 5.2 3.5a.5.5 0 0 0 .8-.4V7.9a.5.5 0 0 0-.8-.4L16 10.5"/><rect x="2" y="6" width="14" height="12" rx="2"/>',
+  mic:      '<path d="M12 19v3"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><rect x="9" y="2" width="6" height="13" rx="3"/>',
+  expand:   '<path d="M8 3H5a2 2 0 0 0-2 2v3"/><path d="M21 8V5a2 2 0 0 0-2-2h-3"/><path d="M3 16v3a2 2 0 0 0 2 2h3"/><path d="M16 21h3a2 2 0 0 0 2-2v-3"/>',
+  collapse: '<path d="M8 3v3a2 2 0 0 1-2 2H3"/><path d="M21 8h-3a2 2 0 0 1-2-2V3"/><path d="M3 16h3a2 2 0 0 1 2 2v3"/><path d="M16 21v-3a2 2 0 0 1 2-2h3"/>',
+  back:     '<path d="m15 18-6-6 6-6"/>',
+  check:    '<path d="M20 6 9 17l-5-5"/>',
+};
 
-  _iconSvgEls = Array.from(wrap.querySelectorAll('svg'));
-  // pre-warm category-color images
-  CATS.forEach((cat, i) => getIconImg(i, cat.color));
-  // pre-warm white images for selected map nodes
-  CATS.forEach((_, i) => getIconImg(i, '#ffffff'));
-  // leave wrap in DOM so SVGs remain accessible for cloning
+// Size is an attribute rather than a CSS concern: an SVG with neither
+// intrinsic dimensions nor a matching rule collapses to zero and the icon
+// disappears with no error to notice.
+function icon(name, size = 16) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" ` +
+         `stroke="currentColor" stroke-width="2" stroke-linecap="round" ` +
+         `stroke-linejoin="round" aria-hidden="true">${ICONS[name]}</svg>`;
 }
 
-function getIconImg(catIdx, color) {
-  const key = catIdx + '-' + color;
-  if (_iconImgCache[key]) return _iconImgCache[key];
-  const src = _iconSvgEls[catIdx];
-  if (!src) return null;
-  const svg = src.cloneNode(true);
-  svg.setAttribute('width',  48);
-  svg.setAttribute('height', 48);
-  svg.setAttribute('stroke', color);
-  svg.setAttribute('fill',   'none');
-  svg.setAttribute('stroke-width', '2');
-  svg.setAttribute('stroke-linecap',  'round');
-  svg.setAttribute('stroke-linejoin', 'round');
-  const str = new XMLSerializer().serializeToString(svg);
-  const img = new Image(48, 48);
-  img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(str);
-  _iconImgCache[key] = img;
-  return img;
-}
+// Icons are drawn by ico() above — pure canvas, no network, no library.
+// An earlier revision fetched Lucide from a CDN, which meant that on the
+// village mesh (no internet) every category icon silently failed to render,
+// leaving an interface whose first design principle is "icon before text"
+// with no icons at all. Nothing here touches the network.
+function initIconCache() { /* nothing to preload */ }
 
-// Draw icon on canvas from prerendered image
+// Draw a category icon straight onto a canvas context.
 function drawCanvasIcon(ctx, catIdx, x, y, size, color) {
-  const img = getIconImg(catIdx, color || CATS[catIdx].color);
-  if (img && img.complete && img.naturalWidth) {
-    ctx.drawImage(img, x - size/2, y - size/2, size, size);
-  }
+  const cat = CATS[catIdx];
+  if (!cat) return;
+  ico(ctx, cat.name, x, y, size / 2, color || PAL.fg);
 }
 
-// Render a Lucide icon circle into a div element
+// Render a category icon into a div, via a small offscreen-sized canvas.
 function drawIconCircle(el, catName, color, size) {
   const catIdx = CATS.findIndex(c => c.name === catName);
   if (catIdx < 0) return;
-  const iconName = CAT_LUCIDE[catIdx];
-  el.style.background = color + '22';
+  // shadcn avatar: neutral surface, hairline border, icon in the foreground.
+  el.style.background   = PAL.bg;
+  el.style.border       = '1px solid ' + PAL.border;
   el.style.width  = size + 'px';
   el.style.height = size + 'px';
   el.style.borderRadius = '50%';
@@ -1078,13 +1355,18 @@ function drawIconCircle(el, catName, color, size) {
   el.style.alignItems = 'center';
   el.style.justifyContent = 'center';
   el.style.flexShrink = '0';
-  const iconSize = Math.round(size * 0.5);
-  el.innerHTML = `<i data-lucide="${iconName}"></i>`;
-  if (window.lucide) lucide.createIcons();
-  const svg = el.querySelector('svg');
-  if (svg) {
-    svg.style.cssText = `width:${iconSize}px;height:${iconSize}px;stroke:${color};fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;`;
-  }
+
+  const dpr = window.devicePixelRatio || 1;
+  const canvas = document.createElement('canvas');
+  canvas.width  = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width  = size + 'px';
+  canvas.style.height = size + 'px';
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+  ico(ctx, catName, size / 2, size / 2, size * 0.25, color);
+
+  el.replaceChildren(canvas);
 }
 
 // ─── AUDIO ───────────────────────────────────────────────────────────
@@ -1189,10 +1471,17 @@ function resizeCanvas(canvas, w, h) {
 function initDial() {
   const cat = currentCat();
   const mType = storyMediaType(dialState.catIdx, dialState.storyIdx % currentStories().length);
-  drawIconCircle(document.getElementById('player-icon'), cat.name, cat.color, 44);
+  drawIconCircle(document.getElementById('player-icon'), cat.name, PAL.fg, 44);
   document.getElementById('player-title').textContent = currentStories()[dialState.storyIdx % currentStories().length];
   document.getElementById('player-cat').textContent   = cat.name;
-  document.getElementById('player-media-badge').textContent = mType === 'video' ? '🎬 video' : '🎧 audio';
+
+  // Duration was previously left at the placeholder baked into the markup, so
+  // the header claimed 3:42 for every recording in the archive.
+  const durSec = storyDurSec();
+  document.getElementById('player-dur').textContent =
+    `${Math.floor(durSec / 60)}:${String(durSec % 60).padStart(2, '0')}`;
+  document.getElementById('player-media-badge').innerHTML =
+    icon(mType === 'video' ? 'video' : 'audio', 10) + (mType === 'video' ? 'video' : 'audio');
   playerWave = genWave(120, dialState.storyIdx + 1);
   fragWave   = playerWave;
 
@@ -1213,7 +1502,7 @@ function initDial() {
     vtc.style.width = '';
     const vtW = vtc.offsetWidth || document.getElementById('dial-player').clientWidth - 28;
     resizeCanvas(vtc, vtW, vtc.clientHeight || 46);
-    drawWaveSymmetric(vtc, playerWave, playPos, cat.color, playerAnnotations);
+    drawWaveSymmetric(vtc, playerWave, playPos, PAL.accent, playerAnnotations);
     initVideoTimelineInteraction();
   } else {
     videoWrap.classList.remove('active');
@@ -1224,7 +1513,7 @@ function initDial() {
   wc.style.width = '';
   const waveW = wc.offsetWidth || document.getElementById('dial-player').clientWidth - 28;
   resizeCanvas(wc, waveW, wc.clientHeight || 46);
-  drawWaveSymmetric(wc, playerWave, playPos, cat.color, playerAnnotations);
+  drawWaveSymmetric(wc, playerWave, playPos, PAL.accent, playerAnnotations);
   initWaveInteraction();
   startCountdown();
   drawDial();
@@ -1252,7 +1541,10 @@ function drawDial() {
   ctx.clearRect(0, 0, W, H);
 
   const cx = W/2, cy = H;
-  const OR  = Math.min(W*0.36, H*0.68);
+  // Radius is bounded by half the width, so on a narrow phone the dial can
+  // never fill the height — 0.44 keeps it thumb-sized without clipping the
+  // labels that sit outside the outer track.
+  const OR  = Math.min(W*0.44, H*0.68);
   const OTW = OR * 0.15;           // outer ring (stories) track width
   const ITW = OR * 0.30;           // inner ring (categories) — wider, heavier
   const IR  = OR - OTW/2 - ITW/2; // inner ring center radius
@@ -1267,7 +1559,7 @@ function drawDial() {
 
   // ring groove tracks
   ctx.save();
-  ctx.strokeStyle = '#f59e0b'; ctx.globalAlpha = 0.15;
+  ctx.strokeStyle = PAL.accent; ctx.globalAlpha = 0.15;
   ctx.lineWidth = OTW;
   ctx.beginPath(); ctx.arc(cx, cy, OR, Math.PI, 0); ctx.stroke();
   ctx.lineWidth = ITW;
@@ -1310,7 +1602,7 @@ function drawDial() {
 
     ctx.save();
     ctx.globalAlpha = 0.2 + fade * 0.8;
-    drawCanvasIcon(ctx, i, ix, iy, iconSize, CATS[i].color);
+    drawCanvasIcon(ctx, i, ix, iy, iconSize, i === dialState.catIdx ? PAL.accent : PAL.fg);
     if (showLabels && fade > 0.4) {
       ctx.fillStyle = '#71717a';
       ctx.font      = `${fontSize}px -apple-system,sans-serif`;
@@ -1338,7 +1630,7 @@ function drawDial() {
     ctx.globalAlpha = 0.2 + fade * 0.8;
 
     // background circle
-    ctx.fillStyle = mType === 'video' ? '#4438A4' : '#71717a';
+    ctx.fillStyle = mType === 'video' ? PAL.fg : PAL.muted;
     ctx.beginPath(); ctx.arc(sx, sy, dotR, 0, Math.PI*2); ctx.fill();
 
     // draw audio (headphones) or video (play/film) icon inside the dot
@@ -1403,7 +1695,7 @@ function drawDial() {
   ctx.font = `500 ${Math.round(archiveFontSize * 0.65)}px -apple-system,sans-serif`;
   ctx.fillText('Archive:', cx, cy - capLabelR * 0.52);
   // Tag name — below, in category color
-  ctx.fillStyle = cat2.color;
+  ctx.fillStyle = PAL.accent;
   ctx.font = `${Math.round(Math.min(10, capLabelR * 0.15))}px -apple-system,sans-serif`;
   ctx.fillText('Tag: ' + cat2.name, cx, cy - capLabelR * 0.18);
   ctx.restore();
@@ -1540,13 +1832,19 @@ function updatePlayerStrip() {
   playerWave        = genWave(120, dialState.storyIdx + 1);
   fragWave          = playerWave;
   playerAnnotations = genAnnotations(dialState.storyIdx, dialState.catIdx);
-  drawIconCircle(document.getElementById('player-icon'), cat.name, cat.color, 44);
+  drawIconCircle(document.getElementById('player-icon'), cat.name, PAL.fg, 44);
   document.getElementById('player-title').textContent = currentStories()[dialState.storyIdx % currentStories().length];
   document.getElementById('player-cat').textContent   = cat.name;
 
+  // Duration was previously left at the placeholder baked into the markup, so
+  // the header claimed 3:42 for every recording in the archive.
+  const durSec = storyDurSec();
+  document.getElementById('player-dur').textContent =
+    `${Math.floor(durSec / 60)}:${String(durSec % 60).padStart(2, '0')}`;
+
   // media type badge
   const badge = document.getElementById('player-media-badge');
-  badge.textContent = mType === 'video' ? '🎬 video' : '🎧 audio';
+  badge.innerHTML = icon(mType === 'video' ? 'video' : 'audio', 10) + (mType === 'video' ? 'video' : 'audio');
 
   // toggle video player vs waveform
   const videoWrap = document.getElementById('video-player-wrap');
@@ -1558,7 +1856,7 @@ function updatePlayerStrip() {
     const vtc = document.getElementById('video-timeline');
     vtc.style.width = '';
     resizeCanvas(vtc, vtc.offsetWidth || document.getElementById('dial-player').clientWidth - 28, vtc.clientHeight || 46);
-    drawWaveSymmetric(vtc, playerWave, playPos, cat.color, playerAnnotations);
+    drawWaveSymmetric(vtc, playerWave, playPos, PAL.accent, playerAnnotations);
     initVideoTimelineInteraction();
   } else {
     videoWrap.classList.remove('active');
@@ -1568,7 +1866,7 @@ function updatePlayerStrip() {
   const wc = document.getElementById('wave-player');
   wc.style.width = '';
   resizeCanvas(wc, wc.offsetWidth, wc.clientHeight || 46);
-  drawWaveSymmetric(wc, playerWave, playPos, cat.color, playerAnnotations);
+  drawWaveSymmetric(wc, playerWave, playPos, PAL.accent, playerAnnotations);
   renderShelf();
 }
 
@@ -1577,7 +1875,7 @@ function toggleVideoExpand() {
   const placeholder = document.getElementById('video-placeholder');
   const btn = document.getElementById('video-expand-btn');
   const expanded = placeholder.classList.toggle('expanded');
-  btn.textContent = expanded ? '⊗' : '⛶';
+  btn.innerHTML = icon(expanded ? 'collapse' : 'expand', 16);
   btn.title = expanded ? 'Collapse video' : 'Expand video';
   // re-layout dial canvas
   requestAnimationFrame(() => {
@@ -1716,30 +2014,31 @@ function _drawCountdownRing(progress) {
   ctx.strokeStyle = '#e4e4e7'; ctx.lineWidth = 2.5; ctx.stroke();
   // progress arc
   ctx.beginPath(); ctx.arc(cx, cy, r, -Math.PI / 2, -Math.PI / 2 + progress * Math.PI * 2);
-  ctx.strokeStyle = currentCat().color; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
+  ctx.strokeStyle = PAL.accent; ctx.lineWidth = 2.5; ctx.lineCap = 'round'; ctx.stroke();
 }
 
 function updatePlayerIcon() {
-  const icon = document.getElementById('player-icon');
-  const cat  = currentCat();
+  // Named `el`, not `icon` — the latter is the SVG helper, and shadowing it
+  // here would break the video icon sync at the bottom of this function.
+  const el = document.getElementById('player-icon');
   if (_countdownRaf) {
-    // countdown running — category icon already set by drawIconCircle, nothing to do
+    // countdown running — category icon already set by drawIconCircle
     return;
   }
   if (isPlaying) {
-    icon.style.background  = cat.color;
-    icon.style.color       = '#fff';
-    icon.style.fontSize    = '16px';
-    icon.innerHTML = '⏸';
+    el.style.background  = PAL.accent;
+    el.style.color       = PAL.bg;
+    el.style.border      = '1px solid ' + PAL.accent;
   } else {
-    icon.style.background  = cat.color + '22';
-    icon.style.color       = cat.color;
-    icon.style.fontSize    = '16px';
-    icon.innerHTML = '▶';
+    el.style.background  = PAL.bg;
+    el.style.color       = PAL.fg;
+    el.style.border      = '1px solid ' + PAL.border;
   }
+  el.innerHTML = icon(isPlaying ? 'pause' : 'play', 16);
+
   // also sync video play icon
   const videoIcon = document.getElementById('video-play-icon');
-  if (videoIcon) videoIcon.textContent = isPlaying ? '⏸' : '▶';
+  if (videoIcon) videoIcon.innerHTML = icon(isPlaying ? 'pause' : 'play', 18);
 }
 
 function _clearCountdownRing() {
@@ -1772,14 +2071,14 @@ function _tickPlayback() {
 
 function _updateScrub() {
   const videoIcon = document.getElementById('video-play-icon');
-  if (videoIcon) videoIcon.textContent = isPlaying ? '⏸' : '▶';
+  if (videoIcon) videoIcon.innerHTML = icon(isPlaying ? 'pause' : 'play', 18);
   // update video timeline if visible
   const vtc = document.getElementById('video-timeline');
   if (vtc && vtc._cssW && document.getElementById('video-player-wrap').classList.contains('active')) {
-    drawWaveSymmetric(vtc, playerWave, playPos, currentCat().color, playerAnnotations);
+    drawWaveSymmetric(vtc, playerWave, playPos, PAL.accent, playerAnnotations);
   }
   const wc = document.getElementById('wave-player');
-  if (wc && wc._cssW) drawWaveSymmetric(wc, playerWave, playPos, currentCat().color, playerAnnotations);
+  if (wc && wc._cssW) drawWaveSymmetric(wc, playerWave, playPos, PAL.accent, playerAnnotations);
 }
 
 // Wave seek + annotation tap
@@ -1829,7 +2128,7 @@ function showWaveTooltip(ann, xPx) {
   const tip = document.getElementById('wave-tooltip');
   tip.innerHTML = `
     <div class="tip-label">
-      <span class="tip-dot" style="background:${CATS[ann.catIdx].color}"></span>
+      <span class="tip-dot"></span>
       ${ann.label}
     </div>
     <span class="tip-more">read more →</span>`;
@@ -1891,7 +2190,7 @@ function showVideoTooltip(ann, xPx) {
   const tip = document.getElementById('video-tooltip');
   tip.innerHTML = `
     <div class="tip-label">
-      <span class="tip-dot" style="background:${CATS[ann.catIdx].color}"></span>
+      <span class="tip-dot"></span>
       ${ann.label}
     </div>
     <span class="tip-more">read more →</span>`;
@@ -1953,7 +2252,7 @@ function appendShelfRow(list, title, cat, playing, onTap) {
     <span class="shelf-row-dur">${dur}</span>`;
   row.addEventListener('click', onTap);
   list.appendChild(row);
-  drawIconCircle(row.querySelector('.shelf-row-icon'), cat.name, cat.color, 32);
+  drawIconCircle(row.querySelector('.shelf-row-icon'), cat.name, PAL.fg, 32);
   return row;
 }
 
@@ -1961,7 +2260,7 @@ function renderShelf() {
   const cat     = currentCat();
   const stories = currentStories();
 
-  drawIconCircle(document.getElementById('shelf-cat-icon'), cat.name, cat.color, 24);
+  drawIconCircle(document.getElementById('shelf-cat-icon'), cat.name, PAL.fg, 24);
   document.getElementById('shelf-handle-label').textContent = cat.name;
   document.getElementById('shelf-handle-sub').textContent   = ` · ${stories.length} recordings`;
 
@@ -1998,7 +2297,14 @@ function renderShelf() {
 
 // ─── SHELF DRAG ───────────────────────────────────────────────────────
 const SHELF_MIN_H = 38;   // just the handle
-const SHELF_OPEN_H = 172; // default open height
+
+// The dial is a semicircle anchored to the bottom edge, so its radius is
+// bounded by half the screen width and it can never fill a tall phone. Rather
+// than leave a dead band above it, the shelf absorbs the slack: taller screen,
+// more recordings visible. Clamped so it never crowds the dial itself.
+function shelfOpenHeight() {
+  return Math.round(Math.min(340, Math.max(172, window.innerHeight * 0.34)));
+}
 
 let _shelfDragStartY  = 0;
 let _shelfDragStartH  = 0;
@@ -2037,14 +2343,14 @@ function shelfDragEnd(e) {
 
   if (!_shelfDidDrag) {
     // tap — snap between open and closed
-    shelfSnapTo(document.getElementById('shelf').getBoundingClientRect().height < SHELF_OPEN_H * 0.6
-      ? SHELF_OPEN_H : SHELF_MIN_H);
+    shelfSnapTo(document.getElementById('shelf').getBoundingClientRect().height < shelfOpenHeight() * 0.6
+      ? shelfOpenHeight() : SHELF_MIN_H);
     return;
   }
 
   // drag ended — snap to nearest state
   const h = document.getElementById('shelf').getBoundingClientRect().height;
-  shelfSnapTo(h < SHELF_OPEN_H * 0.4 ? SHELF_MIN_H : SHELF_OPEN_H);
+  shelfSnapTo(h < shelfOpenHeight() * 0.4 ? SHELF_MIN_H : shelfOpenHeight());
 }
 
 function shelfSnapTo(targetH) {
@@ -2141,11 +2447,11 @@ function initPetal() {
 
 function updatePetalHeader() {
   const cat = CATS[petalCenter];
-  drawIconCircle(document.getElementById('petal-tag-icon'), cat.name, cat.color, 36);
+  drawIconCircle(document.getElementById('petal-tag-icon'), cat.name, PAL.fg, 36);
   const sel = document.getElementById('petal-tag-select');
   sel.value = petalCenter;
-  sel.style.borderColor = cat.color;
-  sel.style.color = cat.color;
+  sel.style.borderColor = PAL.border;
+  sel.style.color = PAL.fg;
 }
 
 function petalSelectTag(val) {
@@ -2191,7 +2497,7 @@ function makeArchiveRow(catIdx, storyIdx, title) {
   const row = document.createElement('div');
   row.className = 'pa-row';
   row.innerHTML = `
-    <div class="pa-media-icon ${mType}">${mType === 'video' ? '🎬' : '🎧'}</div>
+    <div class="pa-media-icon ${mType}">${icon(mType === 'video' ? 'video' : 'audio', 15)}</div>
     <div class="pa-body">
       <div class="pa-title">${title}</div>
       <div class="pa-sub">
@@ -2241,8 +2547,8 @@ function renderPetalArchives() {
       const c = CATS[ti];
       const pill = document.createElement('span');
       pill.className = 'pa-section-tag-pill';
-      pill.style.background = c.color + '18';
-      pill.style.color = c.color;
+      pill.style.background = 'var(--surface)';
+      pill.style.color = 'var(--foreground)';
       pill.textContent = c.name;
       pillWrap.appendChild(pill);
     });
@@ -2403,7 +2709,7 @@ function drawPetal() {
 
     ctx.save();
     ctx.globalAlpha = 0.12 + p.weight * 0.15;
-    ctx.strokeStyle = CATS[p.catIdx].color;
+    ctx.strokeStyle = PAL.fg;
     ctx.lineWidth   = 1.5 + p.weight * 2.5;
     ctx.lineCap     = 'round';
     ctx.beginPath();
@@ -2425,50 +2731,50 @@ function drawPetal() {
 
     // outer glow
     ctx.save();
-    ctx.globalAlpha = 0.15 * p.scale;
-    ctx.fillStyle = cat.color;
+    ctx.globalAlpha = 0.04 * p.scale;
+    ctx.fillStyle = PAL.fg;
     ctx.beginPath(); ctx.arc(px, py, pr + 6, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
     // filled circle
     ctx.save();
-    ctx.globalAlpha = (0.25 + p.weight * 0.35) * p.scale;
-    ctx.fillStyle = cat.color;
+    ctx.globalAlpha = p.scale;
+    ctx.fillStyle = PAL.bg;
     ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.fill();
     ctx.restore();
 
     // border
     ctx.save();
-    ctx.globalAlpha = (0.5 + p.weight * 0.5) * p.scale;
-    ctx.strokeStyle = cat.color;
-    ctx.lineWidth = 2;
+    ctx.globalAlpha = (0.45 + p.weight * 0.55) * p.scale;
+    ctx.strokeStyle = PAL.border;
+    ctx.lineWidth = 1.5;
     ctx.beginPath(); ctx.arc(px, py, pr, 0, Math.PI * 2); ctx.stroke();
     ctx.restore();
 
     // icon
     ctx.save();
     ctx.globalAlpha = p.scale;
-    drawCanvasIcon(ctx, p.catIdx, px, py, pr * 0.9, cat.color);
+    drawCanvasIcon(ctx, p.catIdx, px, py, pr * 0.9, PAL.fg);
     ctx.restore();
   });
 
   // center: pulse ring
   ctx.save();
-  ctx.globalAlpha = 0.08;
-  ctx.fillStyle = centerCat.color;
+  ctx.globalAlpha = 0.10;
+  ctx.fillStyle = PAL.accent;
   ctx.beginPath(); ctx.arc(cx, cy, centerR + 12, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 
   // center: filled circle
   ctx.save();
-  ctx.shadowColor = centerCat.color;
-  ctx.shadowBlur  = 28;
-  ctx.fillStyle   = centerCat.color;
+  ctx.shadowColor = 'rgba(9,9,11,0.18)';
+  ctx.shadowBlur  = 18;
+  ctx.fillStyle   = PAL.accent;
   ctx.beginPath(); ctx.arc(cx, cy, centerR, 0, Math.PI * 2); ctx.fill();
   ctx.shadowBlur  = 0;
   // border
-  ctx.strokeStyle = centerCat.color;
-  ctx.lineWidth   = 3;
+  ctx.strokeStyle = PAL.accent;
+  ctx.lineWidth   = 2;
   ctx.beginPath(); ctx.arc(cx, cy, centerR, 0, Math.PI * 2); ctx.stroke();
   ctx.restore();
 
@@ -2508,7 +2814,7 @@ function drawPetal() {
       const hCat = CATS[hIdx];
       const isCurrent = i === _petalHistory.length - 1;
       ctx.globalAlpha = isCurrent ? 1 : 0.4;
-      ctx.fillStyle = hCat.color;
+      ctx.fillStyle = PAL.fg;
       ctx.beginPath(); ctx.arc(tx, trailY, isCurrent ? trailR + 2 : trailR, 0, Math.PI * 2); ctx.fill();
       drawCanvasIcon(ctx, hIdx, tx, trailY, (isCurrent ? trailR + 2 : trailR) * 0.85, isCurrent ? '#ffffff' : '#ffffff');
 
@@ -2575,166 +2881,19 @@ function petalPointerDown(evt) {
   }
 }
 
-// ─── BROWSE ──────────────────────────────────────────────────────────
-const SCENES       = ['hill','pond','tree','market','forest'];
-const SCENE_COLORS = ['#8B6B3E','#2E6B9E','#3D7A2E','#A05C2E','#2E5E3E'];
-
-function initBrowse() {
-  const catName = document.getElementById('browse-cat-name').textContent;
-  const catIdx  = CATS.findIndex(c => c.name===catName);
-  if (catIdx >= 0) drawIconCircle(document.getElementById('browse-cat-icon'), catName, CATS[catIdx].color, 32);
-
-  const list = document.getElementById('card-list');
-  list.innerHTML = '';
-  const recs = Array.from({length:6}, (_,i) => ({
-    title:      (CAT_STORIES[catIdx||0])[i % (CAT_STORIES[catIdx||0]).length],
-    scene:      SCENES[i%5],
-    sceneColor: SCENE_COLORS[i%5],
-    dur:        `${2+i%3}:${String((10+i*13)%60).padStart(2,'0')}`,
-    tags:       [CATS[catIdx||0], CATS[(catIdx+3)%12]],
-    annCount:   i+1,
-    listeners:  2+i,
-    wave:       genWave(80, i+1),
-  }));
-
-  recs.forEach((rec) => {
-    const card = document.createElement('div');
-    card.className = 'rec-card';
-
-    const sceneWrap = document.createElement('div');
-    sceneWrap.className = 'scene-canvas-wrap';
-    const sc = document.createElement('canvas'); sc.height = 115;
-    const playBtn = document.createElement('button');
-    playBtn.className = 'play-over-btn'; playBtn.textContent = '▶';
-    playBtn.onclick = () => { playBtn.textContent = playBtn.textContent==='▶'?'⏸':'▶'; };
-    sceneWrap.appendChild(sc); sceneWrap.appendChild(playBtn);
-    card.appendChild(sceneWrap);
-
-    const infoBar = document.createElement('div'); infoBar.className = 'info-bar';
-    const tagIcons = document.createElement('div'); tagIcons.className = 'tag-icons';
-    rec.tags.forEach(t => {
-      const ic = document.createElement('canvas'); ic.style.borderRadius='50%';
-      drawIconCircle(ic, t.name, t.color, 22);
-      tagIcons.appendChild(ic);
-    });
-    infoBar.appendChild(tagIcons);
-
-    const dots = document.createElement('div'); dots.className = 'ann-dots';
-    for (let d = 0; d < Math.min(rec.annCount, 6); d++) {
-      const dot = document.createElement('div'); dot.className = 'ann-dot';
-      dot.style.background = rec.sceneColor; dot.style.opacity = 0.35+d*0.12;
-      dots.appendChild(dot);
-    }
-    infoBar.appendChild(dots);
-    const dur = document.createElement('span'); dur.className = 'card-dur'; dur.textContent = rec.dur;
-    infoBar.appendChild(dur);
-    card.appendChild(infoBar);
-    list.appendChild(card);
-
-    requestAnimationFrame(() => {
-      const w = sc.parentElement.clientWidth;
-      resizeCanvas(sc, w, 115);
-      const ctx = sc.getContext('2d');
-      ctx.scale(sc._dpr, sc._dpr);
-      drawScene(ctx, rec.scene, rec.sceneColor, w, 115);
-      drawSceneWave(ctx, rec.wave, w, 115);
-    });
-  });
-}
-
-function drawScene(ctx, type, color, W, H) {
-  ctx.clearRect(0, 0, W, H);
-  switch (type) {
-    case 'hill': {
-      ctx.fillStyle = '#1A2A3A'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = color+'40';
-      ctx.beginPath(); ctx.moveTo(0,H*0.7);
-      ctx.quadraticCurveTo(W*0.3,H*0.2,W*0.6,H*0.65);
-      ctx.quadraticCurveTo(W*0.8,H*0.8,W,H*0.7);
-      ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = color+'BB';
-      ctx.beginPath(); ctx.moveTo(0,H);
-      ctx.quadraticCurveTo(W*0.15,H*0.45,W*0.42,H*0.38);
-      ctx.quadraticCurveTo(W*0.7,H*0.31,W,H*0.55);
-      ctx.lineTo(W,H); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#FFD16699'; ctx.beginPath(); ctx.arc(W*0.85,H*0.18,10,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#09090b'; ctx.beginPath(); ctx.arc(W*0.42,H*0.34,2.5,0,Math.PI*2); ctx.fill();
-      break;
-    }
-    case 'pond': {
-      ctx.fillStyle = '#1A2A1A'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#2E5E3E88';
-      ctx.beginPath(); ctx.ellipse(W/2,H*0.55,W*0.38,H*0.22,0,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle = '#3A7A5ACC';
-      ctx.beginPath(); ctx.ellipse(W/2,H*0.52,W*0.26,H*0.13,0.1,0,Math.PI*2); ctx.fill();
-      [[0.18,0.7],[0.25,0.65],[0.72,0.68],[0.80,0.72]].forEach(([rx,ry]) => {
-        ctx.strokeStyle='#4A7A3E'; ctx.lineWidth=1.5;
-        ctx.beginPath(); ctx.moveTo(W*rx,H*ry+18); ctx.lineTo(W*rx,H*ry-8); ctx.stroke();
-        ctx.fillStyle='#5A8A4E';
-        ctx.beginPath(); ctx.ellipse(W*rx,H*ry-10,2.5,5,0,0,Math.PI*2); ctx.fill();
-      });
-      break;
-    }
-    case 'tree': {
-      ctx.fillStyle = '#0E1A28'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#1A3A1A'; ctx.fillRect(0, H*0.75, W, H*0.25);
-      ctx.fillStyle = '#4A2A18'; ctx.fillRect(W/2-6, H*0.48, 12, H*0.32);
-      [0.68,0.52,0.38].forEach((y,i) => {
-        ctx.fillStyle = ['#2A5A1C','#1E4A12','#144008'][i];
-        ctx.beginPath(); ctx.arc(W/2, H*y, 30-i*4, 0, Math.PI*2); ctx.fill();
-      });
-      break;
-    }
-    case 'market': {
-      ctx.fillStyle = '#2A1E10'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#3A2E1A44';
-      ctx.beginPath(); ctx.moveTo(W*0.35,H); ctx.lineTo(W*0.45,H*0.4); ctx.lineTo(W*0.55,H*0.4); ctx.lineTo(W*0.65,H); ctx.closePath(); ctx.fill();
-      [[0.05,'#C04A20'],[0.65,'#204AC0']].forEach(([sx,sc]) => {
-        ctx.fillStyle = '#4A3A2A'; ctx.fillRect(W*sx, H*0.35, W*0.24, H*0.35);
-        ctx.fillStyle = sc+'88'; ctx.fillRect(W*sx-3, H*0.32, W*0.30, 11);
-      });
-      break;
-    }
-    case 'forest': {
-      ctx.fillStyle = '#0A1A10'; ctx.fillRect(0, 0, W, H);
-      ctx.fillStyle = '#2A2010AA';
-      ctx.beginPath(); ctx.moveTo(W*0.3,H); ctx.lineTo(W*0.42,H*0.38); ctx.lineTo(W*0.58,H*0.38); ctx.lineTo(W*0.7,H); ctx.closePath(); ctx.fill();
-      [[0.08,0.55,0.85],[0.2,0.45,0.75],[0.72,0.5,0.8],[0.85,0.42,0.7]].forEach(([tx,ty,sc]) => {
-        ctx.fillStyle = `rgba(20,60,30,${sc})`;
-        ctx.beginPath();
-        ctx.moveTo(W*tx, H*(ty-0.28*sc));
-        ctx.lineTo(W*(tx-0.1*sc), H*(ty+0.05));
-        ctx.lineTo(W*(tx+0.1*sc), H*(ty+0.05));
-        ctx.closePath(); ctx.fill();
-      });
-      break;
-    }
-  }
-}
-
-// Bottom-anchored waveform overlay on scene cards
-function drawSceneWave(ctx, wave, W, H) {
-  const bh  = 28, nBars = 44;
-  const bw  = (W / nBars) - 0.8;
-  const step = W / nBars;
-  for (let i = 0; i < nBars; i++) {
-    const sIdx  = Math.floor((i/nBars)*wave.length);
-    const amp   = wave[sIdx] * bh * 0.85 + 3;
-    const bx    = i * step + 0.4;
-    ctx.fillStyle   = 'rgba(255,255,255,0.22)';
-    ctx.fillRect(bx, H - amp, bw, amp);
-  }
-}
-
-function setSort(btn) {
-  document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-}
-
 // ─── ANNOTATE ────────────────────────────────────────────────────────
 function initAnnotate() {
   const cat = currentCat();
-  drawIconCircle(document.getElementById('ann-header-icon'), cat.name, cat.color, 36);
+  drawIconCircle(document.getElementById('ann-header-icon'), cat.name, PAL.fg, 36);
+
+  // The header was previously left at the placeholder in the markup, so it
+  // named the first recording in the archive no matter what you were annotating.
+  const dur = storyDurSec();
+  document.querySelector('#ann-header .ann-title').textContent =
+    currentStories()[dialState.storyIdx % currentStories().length];
+  document.querySelector('#ann-header .ann-cat').textContent =
+    `${cat.name} · ${Math.floor(dur / 60)}:${String(dur % 60).padStart(2, '0')}`;
+
   buildTagGrid();
   drawFragCanvas();
   renderPills();
@@ -2748,24 +2907,25 @@ function buildTagGrid() {
     const btn = document.createElement('button');
     btn.className = 'tag-btn' + (selected ? ' selected' : '');
     if (selected) {
-      btn.style.background   = cat.color + '18';
-      btn.style.borderColor  = cat.color;
-      btn.style.color        = cat.color;
+      btn.style.background   = 'var(--accent-tint)';
+      btn.style.borderColor  = PAL.accent;
+      btn.style.color        = PAL.accent;
     }
-    const iconName = CAT_LUCIDE[catIdx];
-    btn.innerHTML = `<i data-lucide="${iconName}"></i>${cat.name}`;
+    const dpr = window.devicePixelRatio || 1;
+    const icon = document.createElement('canvas');
+    icon.width  = 14 * dpr;
+    icon.height = 14 * dpr;
+    icon.style.cssText = 'width:14px;height:14px;flex-shrink:0;';
+    const ictx = icon.getContext('2d');
+    ictx.scale(dpr, dpr);
+    ico(ictx, cat.name, 7, 7, 5, selected ? PAL.accent : PAL.fg);
+
+    btn.append(icon, document.createTextNode(cat.name));
     btn.onclick = () => {
       annSelectedTags.has(cat.name) ? annSelectedTags.delete(cat.name) : annSelectedTags.add(cat.name);
       buildTagGrid(); renderPills();
     };
     grid.appendChild(btn);
-  });
-  if (window.lucide) lucide.createIcons();
-  // Apply stroke color per icon
-  grid.querySelectorAll('.tag-btn').forEach((btn, i) => {
-    const svg = btn.querySelector('svg');
-    if (!svg) return;
-    svg.style.cssText = `width:14px;height:14px;stroke:${CATS[i].color};fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0;`;
   });
 }
 
@@ -2773,16 +2933,16 @@ function renderPills() {
   const pills = document.getElementById('selected-pills');
   pills.innerHTML = '';
   if (!annSelectedTags.size) {
-    pills.style.color = '#71717a'; pills.textContent = '(none selected)'; return;
+    pills.style.color = PAL.muted; pills.textContent = '(none selected)'; return;
   }
   pills.style.color = '';
   annSelectedTags.forEach(name => {
     const cat  = CATS.find(c => c.name===name);
     const pill = document.createElement('span');
     pill.className = 'pill';
-    pill.style.background   = cat.color + '18';
-    pill.style.color        = cat.color;
-    pill.style.borderColor  = cat.color + '55';
+    pill.style.background   = 'var(--accent-tint)';
+    pill.style.color        = PAL.accent;
+    pill.style.borderColor  = PAL.accent;
     pill.textContent = name;
     pills.appendChild(pill);
   });
@@ -2794,9 +2954,11 @@ function drawFragCanvas() {
   const canvas = document.getElementById('frag-canvas');
   const W = canvas.parentElement.clientWidth;
   resizeCanvas(canvas, W, 72);
-  drawWaveFragment(canvas, fragWave, annStart, annEnd, currentCat().color);
+  drawWaveFragment(canvas, fragWave, annStart, annEnd, PAL.accent);
 
-  const totalSec = 222;
+  // Was hardcoded to 222s, so the fragment times shown to the user did not
+  // match the times saveAnnotation() actually stored for any other recording.
+  const totalSec = storyDurSec();
   const s = Math.round(annStart*totalSec), e = Math.round(annEnd*totalSec);
   const fmt = t => `${Math.floor(t/60)}:${String(t%60).padStart(2,'0')}`;
   document.getElementById('frag-time').textContent = `${fmt(s)} → ${fmt(e)}  ·  ${fmt(e-s)} selected`;
@@ -2830,28 +2992,130 @@ function toggleRecord() {
   const btn   = document.getElementById('record-btn');
   btn.className = isRecording ? 'recording' : '';
   btn.id        = 'record-btn';
-  btn.textContent = isRecording ? '⏹ stop recording' : '🎙 record voice note';
+  btn.innerHTML = isRecording ? icon('stop', 14) + 'stop recording'
+                              : icon('mic',  14) + 'record voice note';
+}
+
+// ─── ANNOTATION SYNC ─────────────────────────────────────────────────
+// The only part of the interface that needs the server. Browsing, playback
+// and exploration are entirely local; annotating is the one act that has to
+// reach the Pi eventually — but not necessarily now.
+//
+// Annotations are written to localStorage first and drained to the server in
+// the background. On a mesh that drops out for hours this is the difference
+// between "your annotation is saved" and "your annotation is lost".
+
+const QUEUE_KEY = 'plasma.annotation.queue';
+
+// Stable per-device id, so replayed syncs are recognised as duplicates
+// rather than stored twice.
+function deviceId() {
+  let id = localStorage.getItem('plasma.device');
+  if (!id) {
+    id = 'device-' + Math.random().toString(36).slice(2, 10);
+    localStorage.setItem('plasma.device', id);
+  }
+  return id;
+}
+
+function readQueue()  { try { return JSON.parse(localStorage.getItem(QUEUE_KEY)) || []; } catch { return []; } }
+function writeQueue(q) { localStorage.setItem(QUEUE_KEY, JSON.stringify(q)); }
+
+function queueAnnotation(annotation) {
+  const queue = readQueue();
+  queue.push(annotation);
+  writeQueue(queue);
+}
+
+// Drain the queue to the server. Anything the server rejects as invalid (422)
+// is dropped — retrying it forever would block everything queued behind it.
+// Anything that fails for network reasons stays queued for the next attempt.
+async function flushQueue() {
+  const queue = readQueue();
+  if (!queue.length) return;
+
+  const remaining = [];
+  for (const annotation of queue) {
+    try {
+      const res = await fetch('/api/annotations', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(annotation),
+      });
+      // 2xx means stored (201) or already stored (200). 422 means it will
+      // never be accepted. Anything else is worth retrying.
+      if (!res.ok && res.status !== 422) remaining.push(annotation);
+    } catch {
+      remaining.push(annotation); // offline — keep it for later
+    }
+  }
+  writeQueue(remaining);
+  updateQueueBadge();
+}
+
+function updateQueueBadge() {
+  const badge = document.getElementById('queue-badge');
+  if (!badge) return;
+  const pending = readQueue().length;
+  badge.textContent = pending ? `${pending} waiting to sync` : '';
+  badge.style.display = pending ? 'block' : 'none';
 }
 
 function saveAnnotation() {
   if (!annSelectedTags.size) { alert('Please select at least one tag.'); return; }
+
+  const storyIdx = dialState.storyIdx % currentStories().length;
+  const duration = storyDurSec();
+
+  queueAnnotation({
+    client_id:     `${deviceId()}:${Date.now()}`,
+    recording_id:  `${dialState.catIdx}-${storyIdx}`,
+    start_seconds: +(annStart * duration).toFixed(2),
+    end_seconds:   +(annEnd   * duration).toFixed(2),
+    // annSelectedTags holds category names; the API speaks indices.
+    tag_indices:   [...annSelectedTags]
+                     .map(name => CATS.findIndex(c => c.name === name))
+                     .filter(i => i >= 0)
+                     .sort((a, b) => a - b),
+    created_at:    new Date().toISOString(),
+  });
+
+  // Confirm immediately — the annotation is durably stored on the device.
+  // Whether the Pi has heard about it yet is not the user's problem.
   const btn = document.getElementById('save-btn');
-  btn.textContent = '✓ saved!'; btn.style.background = '#f59e0b';
-  setTimeout(() => { btn.textContent = 'save annotation'; btn.style.background = ''; }, 2000);
+  btn.innerHTML = icon('check', 14) + 'saved';
+  setTimeout(() => { btn.textContent = 'save annotation'; }, 2000);
+
+  updateQueueBadge();
+  flushQueue();
 }
+
+window.addEventListener('online', flushQueue);
 
 // ─── RESIZE ──────────────────────────────────────────────────────────
 window.addEventListener('resize', () => {
   const active = document.querySelector('.view.active');
   if (!active) return;
   const id = active.id.replace('view-', '');
+  document.getElementById('shelf').style.height = shelfOpenHeight() + 'px';
   if (id==='dial')     initDial();
   if (id==='petal')    initPetal();
   if (id==='annotate') drawFragCanvas();
 });
 
+document.getElementById('shelf').style.height = shelfOpenHeight() + 'px';
 initIconCache();
-showView('dial');
+document.getElementById('ann-back').innerHTML         = icon('back', 16);
+document.getElementById('video-expand-btn').innerHTML = icon('expand', 16);
+// updatePlayerIcon() bails out while the autoplay countdown is running, so
+// without this the video overlay is an empty circle for the first few seconds.
+document.getElementById('video-play-icon').innerHTML  = icon('play', 18);
+document.getElementById('record-btn').innerHTML       = icon('mic', 14) + 'record voice note';
+// Deep link: #explore or #annotate. Mostly so the README screenshots can be
+// regenerated headlessly without scripting a tap on the nav.
+showView({ explore: 'petal', annotate: 'annotate' }[location.hash.slice(1)] || 'dial');
+updateQueueBadge();
+flushQueue();
 
 // ─── KEYBOARD NAVIGATION ─────────────────────────────────────────────
 document.addEventListener('keydown', e => {

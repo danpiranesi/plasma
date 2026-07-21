@@ -1,0 +1,232 @@
+# PLASMA archive catalogue.
+# Extracted verbatim from the original single-file prototype so the
+# Ruby service and the client shell can never drift apart.
+# Fixture content standing in for real Kannada oral recordings.
+
+categories:
+  - name: Farming
+    icon: wheat
+    tone_hz: 196
+    archive_count: 124
+    recordings:
+      - Ragi harvest at Gudibande
+      - First rains prayer
+      - Ploughing songs of Doddaballapur
+      - Millet grinding chant
+      - Bullock cart journey
+      - Seed saving traditions
+      - Terraced field memory
+      - Harvest festival at dusk
+  - name: Water
+    icon: droplets
+    tone_hz: 220
+    archive_count: 98
+    recordings:
+      - Elder Lakshamma on water
+      - Monsoon song from the valley
+      - Tank restoration memory
+      - Walking to the well
+      - Flood season story
+      - River naming tradition
+      - Children at the pond
+      - Rainwater harvesting chant
+  - name: Health
+    icon: heart-pulse
+    tone_hz: 261.6
+    archive_count: 76
+    recordings:
+      - Healing herbs of Devarayanadurga
+      - Grandmother's fever cure
+      - Forest medicine walk
+      - Midwife's birth chant
+      - Village elder on bone-setting
+      - Neem tree knowledge
+      - Fasting and feasting cycles
+      - Turmeric harvest songs
+  - name: Stories
+    icon: book-open
+    tone_hz: 293.7
+    archive_count: 143
+    recordings:
+      - Old trade path memory
+      - Tiger and the farmer tale
+      - Why the peacock dances
+      - River goddess legend
+      - Three brothers folktale
+      - The crow and the pot
+      - Moon and the weaver
+      - Night of the full moon
+  - name: Music
+    icon: music
+    tone_hz: 329.6
+    archive_count: 89
+    recordings:
+      - Night music by the pond
+      - Festival drumming, Sankranti
+      - Flute player of the hills
+      - Women's harvest songs
+      - Evening raga memory
+      - Children's clapping rhyme
+      - Nadaswaram at the temple
+      - Lullaby from the valley
+  - name: Festivals
+    icon: sparkles
+    tone_hz: 349.2
+    archive_count: 112
+    recordings:
+      - Ugadi celebration memory
+      - Deepavali in the village
+      - Ganesh procession story
+      - Jatra at the hilltop temple
+      - Harvest moon celebration
+      - Color songs of Holi
+      - New year rice drawing
+      - Sankranti fire songs
+  - name: Animals
+    icon: paw-print
+    tone_hz: 392
+    archive_count: 67
+    recordings:
+      - Cattle grazing routes
+      - Elephant at the forest edge
+      - Shepherd's night watch
+      - Buffalo crossing the river
+      - Birds before the monsoon
+      - Snake and the anthill
+      - Peacock at the edge of fields
+      - Dog that found water
+  - name: People
+    icon: users
+    tone_hz: 440
+    archive_count: 155
+    recordings:
+      - Headman's boundary walk
+      - Woman who planted the grove
+      - Blacksmith's last forge
+      - The traveling healer
+      - Grandmother's migration story
+      - Teacher under the tree
+      - Children of the crossroads
+      - Elder on village memory
+  - name: Places
+    icon: map-pin
+    tone_hz: 493.9
+    archive_count: 88
+    recordings:
+      - Sacred grove at dusk
+      - Ruins near the tank
+      - Mountain pass memory
+      - The haunted field story
+      - Market town history
+      - Stone inscription memory
+      - Boundary stone stories
+      - Valley before the road
+  - name: Seasons
+    icon: sun
+    tone_hz: 523.3
+    archive_count: 72
+    recordings:
+      - Summer well-drying story
+      - Winter fog and the harvest
+      - When the river ran dry
+      - Spring blossoms memory
+      - Cold nights by the fire
+      - Flood year of 1972
+      - The year of no rains
+      - Dry season migrations
+  - name: Food
+    icon: utensils
+    tone_hz: 587.3
+    archive_count: 95
+    recordings:
+      - Forest food gathering
+      - Ragi mudde at dawn
+      - Wild fruit seasons
+      - Salt trading routes
+      - Tamarind tree memory
+      - Women's grain exchange
+      - Evening market stories
+      - Clay pot cooking songs
+  - name: Crafts
+    icon: scissors
+    tone_hz: 659.3
+    archive_count: 61
+    recordings:
+      - Clay pot making
+      - Basket weaving chant
+      - Loom song of the weavers
+      - Blacksmith's fire memory
+      - Rope twisting at night
+      - Mat making by the river
+      - Bamboo craft traditions
+      - Painted wall memories
+tag_graph:
+  - - 0
+    - 1
+    - 0.7
+  - - 0
+    - 6
+    - 0.8
+  - - 0
+    - 9
+    - 0.6
+  - - 1
+    - 8
+    - 0.5
+  - - 1
+    - 9
+    - 0.7
+  - - 2
+    - 4
+    - 0.3
+  - - 2
+    - 7
+    - 0.4
+  - - 3
+    - 4
+    - 0.9
+  - - 3
+    - 7
+    - 0.6
+  - - 3
+    - 5
+    - 0.5
+  - - 4
+    - 5
+    - 0.7
+  - - 5
+    - 6
+    - 0.4
+  - - 6
+    - 9
+    - 0.6
+  - - 7
+    - 8
+    - 0.5
+  - - 7
+    - 11
+    - 0.4
+  - - 8
+    - 10
+    - 0.6
+  - - 9
+    - 10
+    - 0.5
+  - - 10
+    - 11
+    - 0.3
+annotation_labels:
+  - starts singing
+  - mentions water tank
+  - elder speaks up
+  - place name given
+  - second voice
+  - crowd joins in
+  - crop name
+  - ancestor reference
+  - seasonal marker
+  - tool described
+  - laughter
+  - song begins
+  - prayer ends
+  - name of person
