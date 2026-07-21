@@ -86,8 +86,6 @@ A regression test asserts the shell references no external host, so the offline 
 
 **Five colours.** The palette is five tokens; every other shade is one of them at reduced opacity. The archive originally gave each of the twelve categories its own hue, which does not survive a washed-out screen in direct daylight. Identity moved to icon, tone and position; colour now encodes state only, and the single accent marks what is active.
 
-**No emoji.** Emoji render differently on every Android build and are announced by their Unicode name to screen readers. Every icon is an inlined path.
-
 ## Running it
 
 ```bash
@@ -97,12 +95,6 @@ bundle exec rake test
 ```
 
 `index.html` at the repo root is the same shell, served statically. Because the read path needs no server, the interface is fully browsable that way — annotations simply stay queued on the device until something is listening at `/api/annotations`. Deep links: `#explore`, `#annotate`.
-
-## Tests
-
-74 tests, no network, no fixtures beyond the catalogue itself.
-
-The suite includes a **parity test**: the deterministic generators (waveform peaks, media type, seeded annotations) were ported from the original JavaScript prototype, and the fixtures in `test/prototype_parity.json` were produced by executing that JavaScript directly. If the Ruby port ever drifts from the client, the tests fail — which matters, because the shell still draws waveforms locally and must agree with the peaks the server computes.
 
 ## Credits
 
